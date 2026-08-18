@@ -110,4 +110,22 @@ printf '13. target pins the exact private workflow revision\n'
 checked_out_revision="$(git -C "$project/.ai-template" rev-parse HEAD)"
 [[ "$pinned_revision" == "$checked_out_revision" ]]
 
+printf '14. legitimate adapter filenames do not trigger leak detection\n'
+mkdir -p "$project/.cursor/rules"
+printf 'adapter\n' > "$project/.cursor/rules/ai-project-template.mdc"
+git -C "$project" add .cursor/rules/ai-project-template.mdc
+git -C "$project" commit -qm 'add legitimate adapter filename'
+(cd "$project" && ./scripts/check-workflow-leak.sh >/dev/null)
+
+printf '15. root-level private repository copy is rejected\n'
+mkdir -p "$project/ai-project-template/.ai/policies"
+printf 'private\n' > "$project/ai-project-template/.ai/policies/copied.md"
+git -C "$project" add -f ai-project-template/.ai/policies/copied.md
+set +e
+copied_output="$(cd "$project" && ./scripts/check-workflow-leak.sh 2>&1)"
+copied_status=$?
+set -e
+[[ "$copied_status" -ne 0 ]]
+assert_contains "$copied_output" 'copied private ai-project-template repository is tracked'
+
 printf 'All adapter contract tests passed.\n'
