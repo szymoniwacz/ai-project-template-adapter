@@ -33,18 +33,19 @@ if git -C "$ROOT" ls-files --stage -- .ai-template | grep -q .; then
   fi
 fi
 
-while IFS= read -r path; do
-  [[ -n "$path" ]] || continue
-  case "$path" in
-    .ai-template/*) ;;
-    *)
-      if [[ "$path" == *"ai-project-template"* ]]; then
-        echo "error: possible copied private workflow path is tracked: $path" >&2
-        failed=1
-      fi
-      ;;
-  esac
-done < <(git -C "$ROOT" ls-files)
+# A real submodule is represented by the single .ai-template gitlink. Files
+# below .ai-template must never be tracked by the target repository itself.
+if git -C "$ROOT" ls-files -- '.ai-template/*' | grep -q .; then
+  echo "error: files below .ai-template are tracked outside the submodule gitlink" >&2
+  failed=1
+fi
+
+# Reject an obvious root-level copy of the private repository, while allowing
+# legitimate adapter names such as ai-project-template.mdc and test fixtures.
+if git -C "$ROOT" ls-files -- 'ai-project-template/*' | grep -q .; then
+  echo "error: copied private ai-project-template repository is tracked" >&2
+  failed=1
+fi
 
 if [[ "$failed" -ne 0 ]]; then
   exit 1
