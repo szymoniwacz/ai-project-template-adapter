@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+fail() {
+  printf 'ai-project-template-adapter: %s\n' "$1" >&2
+  exit "${2:-1}"
+}
+
+project_root="$(git rev-parse --show-toplevel 2>/dev/null)" || fail "run this command from inside a Git repository"
+
+workflow_home="${AI_PROJECT_TEMPLATE_HOME:-}"
+
+if [[ -z "$workflow_home" && -f "$project_root/.ai/local.yml" ]]; then
+  workflow_home="$(sed -n 's/^[[:space:]]*workflow_path:[[:space:]]*//p' "$project_root/.ai/local.yml" | head -n 1)"
+fi
+
+[[ -n "$workflow_home" ]] || fail "AI_PROJECT_TEMPLATE_HOME is not configured. Set it to your local szymoniwacz/ai-project-template checkout."
+[[ -d "$workflow_home" ]] || fail "AI_PROJECT_TEMPLATE_HOME does not exist: $workflow_home"
+
+workflow_home="$(cd "$workflow_home" && pwd -P)"
+entrypoint="$workflow_home/bin/ai-workflow"
+
+[[ -d "$workflow_home/.git" ]] || fail "configured workflow path is not a Git checkout: $workflow_home"
+[[ "$(basename "$workflow_home")" == "ai-project-template" ]] || fail "configured workflow directory must be named ai-project-template"
+[[ -x "$entrypoint" ]] || fail "canonical workflow entrypoint is unavailable or not executable: $entrypoint"
+
+export AI_TARGET_REPOSITORY="$project_root"
+export AI_PROJECT_CONTEXT="$project_root/.ai"
+
+exec "$entrypoint" "$@"
