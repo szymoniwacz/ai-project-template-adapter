@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+printf 'target=%s\n' "${AI_TARGET_REPOSITORY:-}"
+printf 'context=%s\n' "${AI_PROJECT_CONTEXT:-}"
+printf 'args=%s\n' "$*"
+
+exit "${FAKE_WORKFLOW_EXIT_CODE:-0}"
