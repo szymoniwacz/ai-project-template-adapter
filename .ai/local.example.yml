@@ -1,0 +1,5 @@
+# Optional local-only adapter configuration.
+# Copy to .ai/local.yml only if environment configuration is not sufficient.
+# .ai/local.yml is ignored by Git.
+
+workflow_path: /path/to/ai-project-template
