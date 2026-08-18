@@ -1,0 +1,13 @@
+---
+description: Connect this repository to the external private ai-project-template workflow
+globs: "**/*"
+alwaysApply: true
+---
+
+This repository uses the external private workflow from `szymoniwacz/ai-project-template`.
+
+Project-specific context is stored in `.ai/`.
+
+Use `bin/ai-workflow-doctor` to validate the integration and `bin/ai-workflow` as the adapter entrypoint.
+
+Do not copy, recreate, or approximate reusable workflow behavior in this repository when the private workflow is unavailable.
