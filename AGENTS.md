@@ -1,15 +1,11 @@
-# Agent Integration
+# Agent Instructions
 
-This repository uses an external private AI workflow.
+This repository uses a private reusable AI workflow through the `.ai-template` submodule.
 
-Canonical reusable workflow:
+If `.ai/README.md` is not available, run `./scripts/setup-ai-workflow.sh` first. If the private workflow cannot be loaded, stop rather than inventing replacement workflow rules.
 
-`szymoniwacz/ai-project-template`
+After setup, `.ai/` is the source of truth for workflow, policies, skills, review rules, Git rules, and automation instructions.
 
-Project-specific context lives in:
+Read `.ai/README.md` first. For end-to-end goals follow `.ai/skills/execute-goal.md`.
 
-`.ai/`
-
-Use `bin/ai-workflow-doctor` to validate the connection and `bin/ai-workflow` as the integration entrypoint.
-
-Do not recreate missing reusable workflow rules in this repository. If the canonical workflow is unavailable, fail clearly instead of inventing a fallback process.
+Project-specific context is tracked in `.ai/` as an overlay and must not be overwritten by reusable workflow updates.

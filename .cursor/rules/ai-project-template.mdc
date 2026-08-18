@@ -1,13 +1,10 @@
 ---
-description: Connect this repository to the external private ai-project-template workflow
-globs: "**/*"
+description: Load the private ai-project-template workflow materialized into .ai/
 alwaysApply: true
 ---
 
-This repository uses the external private workflow from `szymoniwacz/ai-project-template`.
+Follow `AGENTS.md`.
 
-Project-specific context is stored in `.ai/`.
+If `.ai/README.md` is unavailable, run `./scripts/setup-ai-workflow.sh`. If private workflow access fails, stop and report the blocker.
 
-Use `bin/ai-workflow-doctor` to validate the integration and `bin/ai-workflow` as the adapter entrypoint.
-
-Do not copy, recreate, or approximate reusable workflow behavior in this repository when the private workflow is unavailable.
+Treat `.ai/` as the runtime source of truth. Read `.ai/README.md` before making repository changes and follow the workflow documents it references.

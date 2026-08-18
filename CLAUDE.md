@@ -1,9 +1,7 @@
-# Claude Code Integration
+# Claude Code Adapter
 
-This repository uses the external private workflow from `szymoniwacz/ai-project-template`.
+Use the repository-level instructions in `AGENTS.md`.
 
-Project-specific context is stored in `.ai/`.
+If `.ai/README.md` is missing, run `./scripts/setup-ai-workflow.sh`. The reusable workflow comes from the private `.ai-template` submodule and must not be copied into Git history.
 
-Validate the connection with `bin/ai-workflow-doctor` and use `bin/ai-workflow` as the integration entrypoint.
-
-Do not duplicate or reconstruct reusable planning, implementation, review, authorization, or quality rules in this repository when the private workflow is unavailable.
+After setup, follow `.ai/README.md` and the referenced workflow documents. Do not duplicate or replace private workflow rules in this file.

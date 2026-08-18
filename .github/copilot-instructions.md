@@ -1,9 +1,7 @@
-# GitHub Copilot Integration
+# GitHub Copilot Instructions
 
-This repository uses the external private AI workflow from `szymoniwacz/ai-project-template`.
+Follow `AGENTS.md`.
 
-Project-specific context is stored in `.ai/`.
+The reusable AI workflow is private and is materialized locally into `.ai/` from the `.ai-template` submodule. If `.ai/README.md` is missing, run `./scripts/setup-ai-workflow.sh` when the environment permits it.
 
-Use `bin/ai-workflow-doctor` to validate the integration and `bin/ai-workflow` as the adapter entrypoint.
-
-Do not copy, recreate, or approximate reusable workflow behavior in this repository if the private workflow is unavailable.
+After setup, `.ai/` is the source of truth. Do not recreate private workflow rules in this file.
