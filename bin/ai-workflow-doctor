@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+set -u
+
+ok=0
+failures=0
+
+pass() {
+  printf '✓ %s\n' "$1"
+  ok=$((ok + 1))
+}
+
+fail() {
+  printf '✗ %s\n' "$1"
+  failures=$((failures + 1))
+}
+
+printf 'AI Project Template Adapter\n\n'
+
+if project_root="$(git rev-parse --show-toplevel 2>/dev/null)"; then
+  pass "project root detected: $project_root"
+else
+  fail "project root not detected; run inside a Git repository"
+  exit 1
+fi
+
+workflow_home="${AI_PROJECT_TEMPLATE_HOME:-}"
+source="AI_PROJECT_TEMPLATE_HOME"
+
+if [[ -z "$workflow_home" && -f "$project_root/.ai/local.yml" ]]; then
+  workflow_home="$(sed -n 's/^[[:space:]]*workflow_path:[[:space:]]*//p' "$project_root/.ai/local.yml" | head -n 1)"
+  source=".ai/local.yml"
+fi
+
+if [[ -n "$workflow_home" ]]; then
+  pass "workflow path configured via $source"
+else
+  fail "workflow path is not configured; set AI_PROJECT_TEMPLATE_HOME"
+fi
+
+if [[ -n "$workflow_home" && -d "$workflow_home" ]]; then
+  workflow_home="$(cd "$workflow_home" && pwd -P)"
+  pass "workflow repository exists: $workflow_home"
+else
+  [[ -n "$workflow_home" ]] && fail "workflow path does not exist: $workflow_home"
+fi
+
+if [[ -n "$workflow_home" && -d "$workflow_home/.git" && "$(basename "$workflow_home")" == "ai-project-template" ]]; then
+  pass "workflow repository identity is valid"
+else
+  [[ -n "$workflow_home" && -d "$workflow_home" ]] && fail "workflow path is not a valid ai-project-template Git checkout"
+fi
+
+entrypoint="${workflow_home:+$workflow_home/bin/ai-workflow}"
+if [[ -n "$entrypoint" && -x "$entrypoint" ]]; then
+  pass "canonical workflow entrypoint is executable"
+else
+  [[ -n "$workflow_home" && -d "$workflow_home" ]] && fail "canonical workflow entrypoint is missing or not executable: $workflow_home/bin/ai-workflow"
+fi
+
+if [[ -f "$project_root/.ai/project.md" ]]; then
+  pass "project context exists: .ai/project.md"
+else
+  fail "project context missing: .ai/project.md"
+fi
+
+printf '\nChecks passed: %d\n' "$ok"
+printf 'Checks failed: %d\n' "$failures"
+
+if [[ "$failures" -eq 0 ]]; then
+  printf 'Status: ready\n'
+  exit 0
+fi
+
+printf 'Status: not ready\n'
+exit 1
