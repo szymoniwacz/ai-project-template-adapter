@@ -1,142 +1,107 @@
-# AI Project Template Adapter
+# ai-project-template-adapter
 
-Thin adapter for using a private `ai-project-template` workflow in public or private repositories without copying the workflow implementation into them.
+Public GitHub template for using the private `szymoniwacz/ai-project-template` workflow without publishing its reusable workflow files.
 
-## Architecture
-
-```text
-project repository
-        ↓
-ai-project-template-adapter
-        ↓
-private ai-project-template
-```
-
-The responsibilities are deliberately separated:
-
-- `ai-project-template` owns the reusable AI workflow and behavior.
-- the target repository owns project-specific context and source code.
-- this adapter owns discovery, validation, delegation, diagnostics, and leak protection.
-
-## Core rule
+## How it works
 
 ```text
-Private repo owns behavior.
-Public repo owns context.
-Adapter owns the connection.
+target repository
+      |
+      v
+.ai-template/                 private git submodule
+      |
+      v
+./scripts/setup-ai-workflow.sh
+      |
+      v
+.ai/                          runtime source of truth
+      |
+      +-- private reusable workflow
+      +-- tracked project-specific overlay
 ```
 
-The adapter must stay thin. It must not contain copied workflows, prompts, policies, review rules, or orchestration from the private repository.
+The repository pins one exact private workflow revision through the `.ai-template` gitlink. Setup materializes the private `.ai/` tree locally and restores project-owned tracked `.ai/**` files over it.
 
-## Local setup
+Private workflow files may exist in the working tree, but they must never be committed to a public target repository.
 
-Point the adapter at a local checkout of the private workflow:
+## Create a project
+
+After creating a repository from this template and cloning it:
 
 ```bash
-export AI_PROJECT_TEMPLATE_HOME="/path/to/ai-project-template"
+./scripts/setup-ai-workflow.sh
 ```
 
-Optional local-only configuration is also supported through `.ai/local.yml`; see `.ai/local.example.yml`.
+The script initializes `.ai-template` when necessary. Your GitHub identity or automation environment must have read access to `szymoniwacz/ai-project-template`.
 
-Project-specific AI context belongs in `.ai/` in the target repository.
-
-## Validate the connection
-
-Run:
-
-```bash
-bin/ai-workflow-doctor
-```
-
-The doctor verifies:
-
-- the target Git repository,
-- workflow path configuration,
-- workflow checkout identity,
-- the canonical private workflow entrypoint,
-- project-specific `.ai/project.md` context.
-
-## Delegate to the private workflow
-
-Use:
-
-```bash
-bin/ai-workflow <arguments>
-```
-
-The adapter forwards arguments unchanged and exports:
+Then customize the tracked project context under:
 
 ```text
-AI_TARGET_REPOSITORY
-AI_PROJECT_CONTEXT
+.ai/project/
 ```
 
-The private workflow must expose the stable executable:
+After setup, agents should read `.ai/README.md` and treat `.ai/` as the workflow source of truth.
 
-```text
-$AI_PROJECT_TEMPLATE_HOME/bin/ai-workflow
-```
-
-See [`docs/compatibility-contract.md`](docs/compatibility-contract.md).
-
-## Prevent private workflow leakage
-
-Run:
+## Check the connection
 
 ```bash
-bin/check-workflow-leak
+./scripts/ai-workflow-doctor.sh
 ```
 
-The deterministic check rejects known reusable workflow directories, tracked local adapter configuration, and symlinks pointing toward the private workflow.
+A ready repository ends with:
+
+```text
+Status: ready
+```
+
+## Prevent workflow leaks
+
+```bash
+./scripts/check-workflow-leak.sh
+```
+
+The check allows private workflow files to exist locally after setup, but fails if reusable materialized workflow files are tracked outside the project-owned overlay allowlist.
+
+## Update the private workflow
+
+```bash
+./scripts/update-ai-workflow.sh
+```
+
+The update is explicit: the script moves the submodule checkout to the configured remote revision and rematerializes `.ai/`, but it does not commit anything. Review the `.ai-template` gitlink change before committing it.
+
+## Cloud automation
+
+Public loaders live under:
+
+```text
+docs/ai-workflow/project-executor-loader.md
+docs/ai-workflow/goal-executor-loader.md
+```
+
+They contain no private executor logic. They only require the automation environment to obtain the private submodule, materialize `.ai/`, and then delegate to the private runtime.
+
+Automation credentials belong in the provider's runtime/secret configuration, never in this repository.
+
+See `docs/automation-setup.md` for the integration contract.
 
 ## Tests
-
-The adapter contract is tested without access to the real private workflow.
-
-A minimal fake workflow fixture verifies:
-
-- fail-closed behavior,
-- argument forwarding,
-- target/context propagation,
-- exit-code propagation,
-- doctor diagnostics,
-- leak detection.
-
-Run locally with:
 
 ```bash
 bash tests/test-adapter.sh
 ```
 
-CI runs the same contract tests on Linux and macOS.
+Tests use a local fake private workflow fixture. CI never requires access to the real private repository.
 
-## Current integration status
+## Design
 
-The public adapter side is implemented and contract-tested.
+- `docs/repository-specification.md` — source-of-truth architecture and invariants.
+- `docs/setup.md` — target repository setup and workflow updates.
+- `docs/automation-setup.md` — cloud automation integration.
 
-End-to-end use with the real private `szymoniwacz/ai-project-template` still requires that repository to expose the canonical executable defined by the compatibility contract:
+## Security model
 
-```text
-bin/ai-workflow
-```
-
-Until that exists, the adapter intentionally fails closed rather than recreating workflow behavior locally.
-
-## Security
-
-Never commit:
-
-- private workflow contents,
-- credentials or tokens,
-- machine-specific private paths,
-- private repository authentication data.
-
-Normal project development must remain usable without access to the private AI workflow.
-
-## Design documentation
-
-- [`docs/repository-specification.md`](docs/repository-specification.md) — source of truth for repository architecture and scope.
-- [`docs/compatibility-contract.md`](docs/compatibility-contract.md) — stable adapter/private-workflow boundary.
+Someone without access to `szymoniwacz/ai-project-template` may see the repository URL and pinned submodule commit, but cannot fetch the private workflow contents. Setup fails closed when the private workflow cannot be loaded.
 
 ## License
 
