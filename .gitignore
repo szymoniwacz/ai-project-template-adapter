@@ -1,0 +1,4 @@
+.ai/local.yml
+.env
+.env.*
+!.env.example
