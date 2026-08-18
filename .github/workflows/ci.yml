@@ -5,29 +5,35 @@ on:
   pull_request:
 
 jobs:
-  test:
+  adapter-contract:
     strategy:
       matrix:
-        os:
-          - ubuntu-latest
-          - macos-latest
+        os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          submodules: false
 
-      - name: Verify executable adapter commands
+      - name: Verify executable scripts
+        shell: bash
         run: |
-          test -x bin/ai-workflow
-          test -x bin/ai-workflow-doctor
-          test -x bin/check-workflow-leak
+          test "$(git ls-files --stage scripts/setup-ai-workflow.sh | awk '{print $1}')" = "100755"
+          test "$(git ls-files --stage scripts/check-workflow-leak.sh | awk '{print $1}')" = "100755"
+          test "$(git ls-files --stage scripts/ai-workflow-doctor.sh | awk '{print $1}')" = "100755"
+          test "$(git ls-files --stage scripts/update-ai-workflow.sh | awk '{print $1}')" = "100755"
+          test "$(git ls-files --stage tests/test-adapter.sh | awk '{print $1}')" = "100755"
 
-      - name: Check shell syntax
-        run: bash -n bin/ai-workflow bin/ai-workflow-doctor bin/check-workflow-leak tests/test-adapter.sh
+      - name: Shell syntax
+        shell: bash
+        run: bash -n scripts/*.sh tests/test-adapter.sh
 
-      - name: Run adapter contract tests
+      - name: Adapter contract tests
+        shell: bash
         run: bash tests/test-adapter.sh
 
-      - name: Check for private workflow leakage
-        run: ./bin/check-workflow-leak
+      - name: Workflow leak check
+        shell: bash
+        run: bash scripts/check-workflow-leak.sh
