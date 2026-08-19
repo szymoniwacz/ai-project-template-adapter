@@ -11,7 +11,7 @@ Create a repository from this GitHub template, clone it, then run:
 The setup command:
 
 1. verifies `.gitmodules`,
-2. initializes the private `.ai-template` submodule if needed,
+2. initializes `.ai-template` when needed and updates it from the configured remote,
 3. validates the expected private workflow structure,
 4. saves tracked project-specific `.ai/**` files,
 5. materializes `.ai-template/.ai/` into `.ai/`,
@@ -53,11 +53,13 @@ Run:
 
 ## Update the workflow
 
-Run:
+Run setup again whenever you want to refresh the private workflow and rematerialize `.ai/`:
 
 ```bash
-./scripts/update-ai-workflow.sh
+./scripts/setup-ai-workflow.sh
 ```
+
+`./scripts/update-ai-workflow.sh` performs the same refresh and additionally reports the old and new revisions.
 
 Then review:
 
@@ -66,7 +68,7 @@ git status
 git diff --submodule
 ```
 
-Commit the `.ai-template` gitlink only when the new workflow revision is intentional. Materialized private `.ai/` files remain local and ignored.
+Commit the `.ai-template` gitlink only when you want the target repository to record the refreshed workflow revision. Materialized private `.ai/` files remain local and ignored.
 
 ## Clone with submodules
 
