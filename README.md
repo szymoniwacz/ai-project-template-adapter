@@ -20,7 +20,7 @@ target repository
       +-- tracked project-specific overlay
 ```
 
-The repository pins one exact private workflow revision through the `.ai-template` gitlink. Setup materializes the private `.ai/` tree locally and restores project-owned tracked `.ai/**` files over it.
+Setup updates `.ai-template` to the latest configured remote revision, then materializes the private `.ai/` tree locally and restores project-owned tracked `.ai/**` files over it.
 
 Private workflow files may exist in the working tree, but they must never be committed to a public target repository.
 
@@ -32,7 +32,7 @@ After creating a repository from this template and cloning it:
 ./scripts/setup-ai-workflow.sh
 ```
 
-The script initializes `.ai-template` when necessary. Your GitHub identity or automation environment must have read access to `szymoniwacz/ai-project-template`.
+The script initializes or updates `.ai-template` and materializes the current private workflow. Your GitHub identity or automation environment must have read access to `szymoniwacz/ai-project-template`.
 
 Then customize the tracked project context under:
 
@@ -64,11 +64,19 @@ The check allows private workflow files to exist locally after setup, but fails 
 
 ## Update the private workflow
 
+Running setup again updates and rematerializes the workflow:
+
+```bash
+./scripts/setup-ai-workflow.sh
+```
+
+For a revision summary around the same operation, use:
+
 ```bash
 ./scripts/update-ai-workflow.sh
 ```
 
-The update is explicit: the script moves the submodule checkout to the configured remote revision and rematerializes `.ai/`, but it does not commit anything. Review the `.ai-template` gitlink change before committing it.
+Neither script commits the changed `.ai-template` gitlink. Review and commit that change explicitly when you want the project to record the new workflow revision.
 
 ## Cloud automation
 
@@ -101,7 +109,7 @@ Tests use a local fake private workflow fixture. CI never requires access to the
 
 ## Security model
 
-Someone without access to `szymoniwacz/ai-project-template` may see the repository URL and pinned submodule commit, but cannot fetch the private workflow contents. Setup fails closed when the private workflow cannot be loaded.
+Someone without access to `szymoniwacz/ai-project-template` may see the repository URL and committed submodule revision, but cannot fetch the private workflow contents. Setup fails closed when the private workflow cannot be loaded.
 
 ## License
 
