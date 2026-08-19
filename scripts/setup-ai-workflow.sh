@@ -20,12 +20,10 @@ if ! git -C "$ROOT" config -f .gitmodules --get-regexp '^submodule\.\.ai-templat
   exit 1
 fi
 
-if [[ ! -f "$TEMPLATE/.ai/README.md" ]]; then
-  if ! git -C "$ROOT" submodule update --init --recursive .ai-template; then
-    echo "error: private AI workflow is unavailable" >&2
-    echo "hint: ensure this environment can read szymoniwacz/ai-project-template" >&2
-    exit 1
-  fi
+if ! git -C "$ROOT" submodule update --init --recursive .ai-template; then
+  echo "error: private AI workflow is unavailable" >&2
+  echo "hint: ensure this environment can read szymoniwacz/ai-project-template" >&2
+  exit 1
 fi
 
 required=(
