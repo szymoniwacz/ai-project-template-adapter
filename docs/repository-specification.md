@@ -34,7 +34,7 @@ The design must satisfy all of the following:
 2. Public target repositories may reference the private repository but must not commit its contents.
 3. `.ai/` is the runtime source of truth seen by agents and automations.
 4. Project-specific AI context survives workflow setup and upgrades.
-5. The workflow version used by a target repository is deterministic and auditable through the submodule gitlink.
+5. The workflow revision used locally is visible and the target repository may record it through the submodule gitlink.
 6. Local agents and cloud automations use the same workflow layout.
 7. Missing access to the private workflow fails closed.
 8. The adapter remains thin and does not duplicate Project Executor, Goal Executor, policies, prompts, or other reusable workflow logic.
@@ -76,9 +76,9 @@ Every target repository contains a git submodule at exactly:
 https://github.com/szymoniwacz/ai-project-template.git
 ```
 
-The gitlink pins one exact commit of the private workflow. A workflow upgrade therefore becomes an explicit target-repository change rather than an implicit dependency on the current private `main` branch.
+Setup updates the submodule checkout from its configured remote before materialization. The target repository may commit the resulting `.ai-template` gitlink when it wants to record that workflow revision explicitly.
 
-A user without read access may see the private repository name and pinned commit identifier, but cannot retrieve the private repository contents through the submodule.
+A user without read access may see the private repository name and committed submodule identifier, but cannot retrieve the private repository contents through the submodule.
 
 ## 4. Runtime source of truth
 
@@ -97,18 +97,18 @@ This preserves the existing workflow assumptions used by Project Executor and Go
 
 ## 5. Materialization
 
-`scripts/setup-ai-workflow.sh` is the canonical setup command.
+`scripts/setup-ai-workflow.sh` is the canonical setup and refresh command.
 
 It must:
 
 1. resolve the target repository root,
-2. initialize `.ai-template` when it is not already available,
+2. initialize `.ai-template` when needed and update it from the configured remote,
 3. verify the private workflow has the required structure,
 4. save the target repository's tracked `.ai/**` files as project overlay,
 5. materialize `.ai-template/.ai/` into `.ai/` with deletion of stale template-owned files,
 6. restore the saved project overlay over the materialized workflow,
 7. leave the target working tree with the private workflow available locally but not tracked,
-8. fail closed when the private workflow cannot be initialized or validated.
+8. fail closed when the private workflow cannot be initialized, updated, or validated.
 
 The setup command must be safe to run repeatedly.
 
@@ -198,20 +198,15 @@ A user without access should receive a clear setup failure and no fallback imple
 
 ## 11. Workflow upgrades
 
-Upgrades are explicit and deterministic.
-
-Conceptually:
+Setup refreshes the configured private workflow remote and rematerializes `.ai/`:
 
 ```text
-git submodule update --remote .ai-template
 ./scripts/setup-ai-workflow.sh
-git add .ai-template
-git commit -m "Update AI workflow"
 ```
 
-The adapter may provide a helper script, but it must never commit automatically.
+The adapter may provide a helper script that reports the old and new revisions, but neither setup nor the helper may commit automatically.
 
-The old and new submodule revisions should be visible to the user.
+After refresh, the target repository may commit the changed `.ai-template` gitlink when it wants to record that workflow revision explicitly.
 
 ## 12. Diagnostics
 
@@ -226,7 +221,7 @@ The workflow doctor checks at least:
 - materialized `.ai/README.md`,
 - project overlay presence,
 - leak-check result,
-- pinned private workflow revision when available.
+- private workflow revision when available.
 
 Its final state is `ready` or `not ready`.
 
@@ -238,17 +233,17 @@ Contract coverage includes:
 
 1. valid materialization,
 2. setup initialization behavior,
-3. fail-closed behavior when workflow is unavailable,
-4. invalid workflow structure,
-5. tracked overlay preservation,
-6. preservation of uncommitted overlay edits,
-7. stale template file deletion,
-8. idempotent repeated setup,
-9. reusable private workflow remaining untracked,
-10. leak detection for accidentally tracked private files,
-11. nested-directory invocation,
-12. deterministic submodule revision,
-13. explicit workflow update behavior,
+3. setup refreshes a newer configured remote revision,
+4. fail-closed behavior when workflow is unavailable,
+5. invalid workflow structure,
+6. tracked overlay preservation,
+7. preservation of uncommitted overlay edits,
+8. stale template file deletion,
+9. idempotent repeated setup,
+10. reusable private workflow remaining untracked,
+11. leak detection for accidentally tracked private files,
+12. nested-directory invocation,
+13. workflow revision reporting,
 14. Linux and macOS CI execution.
 
 ## 14. Invariants
@@ -271,7 +266,7 @@ G. Public loaders never implement Project Executor or Goal Executor logic.
 
 H. Local and cloud execution use the same materialized workflow layout.
 
-I. The private workflow revision is pinned by the submodule gitlink.
+I. Setup refreshes `.ai-template` from its configured remote before materialization; the gitlink may record the selected revision when committed.
 
 J. The adapter does not maintain a second runtime-delegation architecture.
 
@@ -294,4 +289,4 @@ The desired target-repository bootstrap is intentionally small:
 ./scripts/setup-ai-workflow.sh
 ```
 
-The script initializes the private submodule when necessary and materializes the workflow. The user then customizes tracked project context and can use the normal AI workflow, including `/execute-goal` and `/execute-project` when the corresponding automation environment has private-repository access.
+The script initializes or updates the private submodule and materializes the workflow. The user then customizes tracked project context and can use the normal AI workflow, including `/execute-goal` and `/execute-project` when the corresponding automation environment has private-repository access.
