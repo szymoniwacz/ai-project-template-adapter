@@ -52,39 +52,34 @@ printf '2. materializes private workflow\n'
 [[ -f "$project/.ai/automation/project-executor.md" ]]
 [[ -f "$project/.ai/policies/private-rule.md" ]]
 
-printf '3. materializes Codex and Cursor adapters\n'
-[[ -f "$project/.agents/skills/project-intake/SKILL.md" ]]
-[[ -f "$project/.cursor/commands/execute-goal.md" ]]
-[[ -z "$(git -C "$project" status --porcelain -- .agents/skills .cursor/commands)" ]]
-
-printf '4. preserves tracked project overlay\n'
+printf '3. preserves tracked project overlay\n'
 grep -q 'project-owned' "$project/.ai/project/product-context.md"
 
-printf '5. preserves uncommitted overlay edits\n'
+printf '4. preserves uncommitted overlay edits\n'
 printf '# Product Context\nuncommitted-edit\n' > "$project/.ai/project/product-context.md"
 (cd "$project" && GIT_ALLOW_PROTOCOL=file ./scripts/setup-ai-workflow.sh >/dev/null)
 grep -q 'uncommitted-edit' "$project/.ai/project/product-context.md"
 git -C "$project" checkout -- .ai/project/product-context.md
 
-printf '6. removes stale template-owned files\n'
+printf '5. removes stale template-owned files\n'
 printf 'stale\n' > "$project/.ai/stale-private.md"
 (cd "$project" && GIT_ALLOW_PROTOCOL=file ./scripts/setup-ai-workflow.sh >/dev/null)
 [[ ! -e "$project/.ai/stale-private.md" ]]
 
-printf '7. repeated setup is idempotent\n'
+printf '6. repeated setup is idempotent\n'
 first="$(cd "$project" && GIT_ALLOW_PROTOCOL=file ./scripts/setup-ai-workflow.sh)"
 second="$(cd "$project" && GIT_ALLOW_PROTOCOL=file ./scripts/setup-ai-workflow.sh)"
 assert_contains "$first" 'AI workflow ready'
 assert_contains "$second" 'AI workflow ready'
 
-printf '8. materialized private files remain untracked\n'
+printf '7. materialized private files remain untracked\n'
 tracked="$(git -C "$project" ls-files -- .ai)"
 [[ "$tracked" == '.ai/project/product-context.md' ]]
 
-printf '9. leak check passes for clean project\n'
+printf '8. leak check passes for clean project\n'
 (cd "$project" && ./scripts/check-workflow-leak.sh >/dev/null)
 
-printf '10. leak check rejects tracked private workflow\n'
+printf '9. leak check rejects tracked private workflow\n'
 git -C "$project" add -f .ai/policies/private-rule.md
 set +e
 leak_output="$(cd "$project" && ./scripts/check-workflow-leak.sh 2>&1)"
@@ -94,15 +89,15 @@ set -e
 assert_contains "$leak_output" 'private/materialized AI workflow file is tracked'
 git -C "$project" reset -q .ai/policies/private-rule.md
 
-printf '11. doctor reports ready after setup\n'
+printf '10. doctor reports ready after setup\n'
 doctor_output="$(cd "$project" && ./scripts/ai-workflow-doctor.sh)"
 assert_contains "$doctor_output" 'Status: ready'
 
-printf '12. setup works from nested directory\n'
+printf '11. setup works from nested directory\n'
 mkdir -p "$project/nested/deeper"
 (cd "$project/nested/deeper" && GIT_ALLOW_PROTOCOL=file ../../scripts/setup-ai-workflow.sh >/dev/null)
 
-printf '13. missing submodule configuration fails closed\n'
+printf '12. missing submodule configuration fails closed\n'
 mkdir -p "$missing_config/scripts"
 cp "$adapter_root/scripts/setup-ai-workflow.sh" "$missing_config/scripts/"
 git -C "$missing_config" init -q
@@ -113,7 +108,7 @@ set -e
 [[ "$missing_status" -ne 0 ]]
 assert_contains "$missing_output" '.gitmodules is missing'
 
-printf '14. setup updates the private workflow from the configured remote\n'
+printf '13. setup updates the private workflow from the configured remote\n'
 printf 'updated\n' > "$fixture_repo/.ai/updated-by-setup.md"
 git -C "$fixture_repo" add .ai/updated-by-setup.md
 git -C "$fixture_repo" commit -qm 'update workflow'
@@ -123,14 +118,14 @@ checked_out_revision="$(git -C "$project/.ai-template" rev-parse HEAD)"
 [[ "$latest_revision" == "$checked_out_revision" ]]
 [[ -f "$project/.ai/updated-by-setup.md" ]]
 
-printf '15. legitimate adapter filenames do not trigger leak detection\n'
+printf '14. legitimate adapter filenames do not trigger leak detection\n'
 mkdir -p "$project/.cursor/rules"
 printf 'adapter\n' > "$project/.cursor/rules/ai-project-template.mdc"
 git -C "$project" add .cursor/rules/ai-project-template.mdc
 git -C "$project" commit -qm 'add legitimate adapter filename'
 (cd "$project" && ./scripts/check-workflow-leak.sh >/dev/null)
 
-printf '16. root-level private repository copy is rejected\n'
+printf '15. root-level private repository copy is rejected\n'
 mkdir -p "$project/ai-project-template/.ai/policies"
 printf 'private\n' > "$project/ai-project-template/.ai/policies/copied.md"
 git -C "$project" add -f ai-project-template/.ai/policies/copied.md
@@ -140,5 +135,10 @@ copied_status=$?
 set -e
 [[ "$copied_status" -ne 0 ]]
 assert_contains "$copied_output" 'copied private ai-project-template repository is tracked'
+
+printf '16. setup materializes Codex and Cursor adapters\n'
+[[ -f "$project/.agents/skills/project-intake/SKILL.md" ]]
+[[ -f "$project/.cursor/commands/execute-goal.md" ]]
+[[ -z "$(git -C "$project" status --porcelain -- .agents/skills .cursor/commands)" ]]
 
 printf 'All adapter contract tests passed.\n'
