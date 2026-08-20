@@ -43,7 +43,7 @@ The design must satisfy all of the following:
 
 ### Private `szymoniwacz/ai-project-template`
 
-Owns reusable workflow behavior, including `.ai/automation`, `.ai/policies`, `.ai/skills`, `.ai/workflows`, `.ai/review`, `.ai/git`, `.ai/instructions`, conventions, prompts, quality rules, onboarding material, and other reusable AI engineering rules.
+Owns reusable workflow behavior, including `.ai/automation`, `.ai/policies`, `.ai/skills`, `.ai/workflows`, `.ai/review`, `.ai/git`, `.ai/instructions`, conventions, prompts, quality rules, onboarding material, and reusable tool entrypoint adapters under `.agents/skills/` and `.cursor/commands/`.
 
 ### Public `szymoniwacz/ai-project-template-adapter`
 
@@ -106,9 +106,10 @@ It must:
 3. verify the private workflow has the required structure,
 4. save the target repository's tracked `.ai/**` files as project overlay,
 5. materialize `.ai-template/.ai/` into `.ai/` with deletion of stale template-owned files,
-6. restore the saved project overlay over the materialized workflow,
-7. leave the target working tree with the private workflow available locally but not tracked,
-8. fail closed when the private workflow cannot be initialized, updated, or validated.
+6. materialize `.ai-template/.agents/skills/` into `.agents/skills/` and `.ai-template/.cursor/commands/` into `.cursor/commands/`,
+7. restore the saved project overlay over the materialized workflow,
+8. leave the target working tree with the private workflow available locally but not tracked,
+9. fail closed when the private workflow cannot be initialized, updated, or validated.
 
 The setup command must be safe to run repeatedly.
 
@@ -146,7 +147,7 @@ private workflow may exist locally
 private workflow must not be committed to the target repository
 ```
 
-The repository therefore ignores known reusable materialized paths while explicitly allowing project-owned overlay paths.
+The repository therefore ignores known reusable materialized paths, including `.agents/skills/` and `.cursor/commands/`, while explicitly allowing project-owned overlay paths.
 
 `scripts/check-workflow-leak.sh` must fail when:
 
@@ -160,6 +161,8 @@ The check must not fail merely because setup has materialized private workflow f
 ## 8. Thin agent adapters
 
 `AGENTS.md`, `CLAUDE.md`, Cursor rules, and GitHub Copilot instructions are public thin adapters.
+
+Repo-scoped Codex skills and Cursor commands are materialized from `szymoniwacz/ai-project-template` so they stay synchronized with the canonical workflow.
 
 They must not reproduce reusable workflow rules. Their role is to tell the agent:
 
@@ -244,7 +247,8 @@ Contract coverage includes:
 11. leak detection for accidentally tracked private files,
 12. nested-directory invocation,
 13. workflow revision reporting,
-14. Linux and macOS CI execution.
+14. Linux and macOS CI execution,
+15. Codex and Cursor adapter materialization.
 
 ## 14. Invariants
 

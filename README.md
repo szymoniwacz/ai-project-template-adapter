@@ -13,14 +13,12 @@ target repository
       v
 ./scripts/setup-ai-workflow.sh
       |
-      v
-.ai/                          runtime source of truth
-      |
-      +-- private reusable workflow
-      +-- tracked project-specific overlay
+      +--> .ai/               runtime source of truth
+      +--> .agents/skills/    Codex repo skills
+      +--> .cursor/commands/  Cursor slash commands
 ```
 
-Setup updates `.ai-template` to the latest configured remote revision, then materializes the private `.ai/` tree locally and restores project-owned tracked `.ai/**` files over it.
+Setup updates `.ai-template` to the latest configured remote revision, materializes the private `.ai/` tree and thin tool adapters locally, then restores project-owned tracked `.ai/**` files over the workflow.
 
 Private workflow files may exist in the working tree, but they must never be committed to a public target repository.
 
@@ -32,7 +30,7 @@ After creating a repository from this template and cloning it:
 ./scripts/setup-ai-workflow.sh
 ```
 
-The script initializes or updates `.ai-template` and materializes the current private workflow. Your GitHub identity or automation environment must have read access to `szymoniwacz/ai-project-template`.
+The script initializes or updates `.ai-template` and materializes the current private workflow plus Codex/Cursor adapters. Your GitHub identity or automation environment must have read access to `szymoniwacz/ai-project-template`.
 
 Then customize the tracked project context under:
 
@@ -40,7 +38,7 @@ Then customize the tracked project context under:
 .ai/project/
 ```
 
-After setup, agents should read `.ai/README.md` and treat `.ai/` as the workflow source of truth.
+After setup, agents should read `.ai/README.md` and treat `.ai/` as the workflow source of truth. Tool adapters under `.agents/skills/` and `.cursor/commands/` only delegate into that shared workflow.
 
 ## Check the connection
 
@@ -64,7 +62,7 @@ The check allows private workflow files to exist locally after setup, but fails 
 
 ## Update the private workflow
 
-Running setup again updates and rematerializes the workflow:
+Running setup again updates and rematerializes the workflow and tool adapters:
 
 ```bash
 ./scripts/setup-ai-workflow.sh

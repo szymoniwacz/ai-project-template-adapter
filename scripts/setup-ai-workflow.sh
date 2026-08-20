@@ -32,6 +32,8 @@ required=(
   ".ai/automation/goal-executor.md"
   ".ai/instructions/workflow.md"
   ".ai/skills/execute-goal.md"
+  ".agents/skills/project-intake/SKILL.md"
+  ".cursor/commands/execute-goal.md"
 )
 for path in "${required[@]}"; do
   if [[ ! -f "$TEMPLATE/$path" ]]; then
@@ -53,6 +55,11 @@ done < <(git -C "$ROOT" ls-files -z -- .ai)
 
 mkdir -p "$AI"
 rsync -a --delete "$TEMPLATE/.ai/" "$AI/"
+
+for path in ".agents/skills" ".cursor/commands"; do
+  mkdir -p "$ROOT/$path"
+  rsync -a --delete "$TEMPLATE/$path/" "$ROOT/$path/"
+done
 
 if [[ -d "$OVERLAY/.ai" ]]; then
   rsync -a "$OVERLAY/.ai/" "$AI/"

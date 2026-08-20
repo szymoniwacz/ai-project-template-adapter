@@ -10,6 +10,9 @@ project="$tmp_root/project"
 missing_config="$tmp_root/missing-config"
 
 cp -a "$adapter_root/tests/fixtures/fake-ai-project-template" "$fixture_repo"
+mkdir -p "$fixture_repo/.agents/skills/project-intake" "$fixture_repo/.cursor/commands"
+printf '%s\n' '---' 'name: project-intake' 'description: test adapter' '---' > "$fixture_repo/.agents/skills/project-intake/SKILL.md"
+printf '# /execute-goal\n\nDelegate to `.ai/skills/execute-goal.md`.\n' > "$fixture_repo/.cursor/commands/execute-goal.md"
 git -C "$fixture_repo" init -q
 git -C "$fixture_repo" config user.email test@example.com
 git -C "$fixture_repo" config user.name Test
@@ -132,5 +135,10 @@ copied_status=$?
 set -e
 [[ "$copied_status" -ne 0 ]]
 assert_contains "$copied_output" 'copied private ai-project-template repository is tracked'
+
+printf '16. setup materializes Codex and Cursor adapters\n'
+[[ -f "$project/.agents/skills/project-intake/SKILL.md" ]]
+[[ -f "$project/.cursor/commands/execute-goal.md" ]]
+[[ -z "$(git -C "$project" status --porcelain -- .agents/skills .cursor/commands)" ]]
 
 printf 'All adapter contract tests passed.\n'
