@@ -10,14 +10,10 @@ project="$tmp_root/project"
 missing_config="$tmp_root/missing-config"
 
 cp -a "$adapter_root/tests/fixtures/fake-ai-project-template" "$fixture_repo"
-mkdir -p "$fixture_repo/.agents/skills/project-intake" "$fixture_repo/.cursor/commands" "$fixture_repo/.ai/project" "$fixture_repo/.ai/docs"
+mkdir -p "$fixture_repo/.agents/skills/project-intake" "$fixture_repo/.cursor/commands" "$fixture_repo/.ai/project"
 printf '%s\n' '---' 'name: project-intake' 'description: test adapter' '---' > "$fixture_repo/.agents/skills/project-intake/SKILL.md"
 printf '# /execute-goal\n\nDelegate to `.ai/skills/execute-goal.md`.\n' > "$fixture_repo/.cursor/commands/execute-goal.md"
 printf 'template-owned\n' > "$fixture_repo/.ai/project/template-only.md"
-printf 'template\n' > "$fixture_repo/.ai/project/vision.md"
-printf 'template\n' > "$fixture_repo/.ai/project/scope.md"
-printf 'template\n' > "$fixture_repo/.ai/project/glossary.md"
-printf 'template\n' > "$fixture_repo/.ai/docs/project-requirements.md"
 git -C "$fixture_repo" init -q
 git -C "$fixture_repo" config user.email test@example.com
 git -C "$fixture_repo" config user.name Test
@@ -77,12 +73,17 @@ second="$(cd "$project" && GIT_ALLOW_PROTOCOL=file ./scripts/setup-ai-workflow.s
 assert_contains "$first" 'AI workflow ready'
 assert_contains "$second" 'AI workflow ready'
 
-printf '7. project definition files are visible to Git while other materialized files stay ignored\n'
-status="$(git -C "$project" status --porcelain --untracked-files=all -- .ai)"
-assert_contains "$status" '.ai/project/vision.md'
-assert_contains "$status" '.ai/project/scope.md'
-assert_contains "$status" '.ai/project/glossary.md'
-assert_contains "$status" '.ai/docs/project-requirements.md'
+printf '7. project definition files are not ignored while other materialized files stay ignored\n'
+for path in \
+  .ai/project/vision.md \
+  .ai/project/scope.md \
+  .ai/project/glossary.md \
+  .ai/docs/project-requirements.md; do
+  if git -C "$project" check-ignore -q "$path"; then
+    echo "project definition file is unexpectedly ignored: $path" >&2
+    exit 1
+  fi
+done
 git -C "$project" check-ignore -q .ai/project/template-only.md
 
 printf '8. leak check passes for clean project\n'
