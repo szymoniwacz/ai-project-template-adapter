@@ -21,11 +21,9 @@ target repository
       v
 scripts/setup-ai-workflow.sh
       |
-      v
-.ai/                       materialized runtime source of truth
-      |
-      +-- reusable private workflow
-      +-- project-specific tracked overlay
+      +--> .ai/            materialized runtime source of truth
+      +--> .agents/skills/ Codex repo skills
+      +--> .cursor/commands/ Cursor slash commands
 ```
 
 The design must satisfy all of the following:
@@ -43,17 +41,17 @@ The design must satisfy all of the following:
 
 ### Private `szymoniwacz/ai-project-template`
 
-Owns reusable workflow behavior, including `.ai/automation`, `.ai/policies`, `.ai/skills`, `.ai/workflows`, `.ai/review`, `.ai/git`, `.ai/instructions`, conventions, prompts, quality rules, onboarding material, and other reusable AI engineering rules.
+Owns reusable workflow behavior, including `.ai/automation`, `.ai/policies`, `.ai/skills`, `.ai/workflows`, `.ai/review`, `.ai/git`, `.ai/instructions`, conventions, prompts, quality rules, onboarding material, and thin tool-specific entrypoint adapters such as `.agents/skills/` and `.cursor/commands/`.
 
 ### Public `szymoniwacz/ai-project-template-adapter`
 
 Owns only the integration contract:
 
 - `.gitmodules` and the `.ai-template` gitlink,
-- workflow setup/materialization,
+- workflow and tool-adapter setup/materialization,
 - project-overlay preservation,
 - leak protection,
-- thin agent adapters,
+- public bootstrap adapters and rules,
 - thin automation loaders,
 - diagnostics,
 - tests and documentation.
@@ -84,7 +82,7 @@ A user without read access may see the private repository name and committed sub
 
 `.ai-template/` is the private upstream source. It is not the path agents should normally follow.
 
-After setup, `.ai/` is the runtime source of truth. Agent adapters must direct tools to `.ai/README.md` and the workflow paths materialized beneath `.ai/`.
+After setup, `.ai/` is the runtime source of truth. Tool adapters under `.agents/skills/` and `.cursor/commands/` must only delegate tools into workflow paths materialized beneath `.ai/`.
 
 This preserves the existing workflow assumptions used by Project Executor and Goal Executor, including paths such as:
 
@@ -103,12 +101,13 @@ It must:
 
 1. resolve the target repository root,
 2. initialize `.ai-template` when needed and update it from the configured remote,
-3. verify the private workflow has the required structure,
+3. verify the private workflow and required tool adapters have the expected structure,
 4. save the target repository's tracked `.ai/**` files as project overlay,
 5. materialize `.ai-template/.ai/` into `.ai/` with deletion of stale template-owned files,
-6. restore the saved project overlay over the materialized workflow,
-7. leave the target working tree with the private workflow available locally but not tracked,
-8. fail closed when the private workflow cannot be initialized, updated, or validated.
+6. materialize `.ai-template/.agents/skills/` into `.agents/skills/` and `.ai-template/.cursor/commands/` into `.cursor/commands/`,
+7. restore the saved project overlay over the materialized workflow,
+8. leave materialized workflow and tool-adapter files local and untracked,
+9. fail closed when the private workflow cannot be initialized, updated, or validated.
 
 The setup command must be safe to run repeatedly.
 
@@ -118,7 +117,7 @@ The adapter must not contain DiffRat-specific filenames or paths.
 
 The generic ownership rule is:
 
-> Files already tracked by the target repository under `.ai/**` are project-owned overlay. Untracked files materialized from `.ai-template/.ai/` are template-owned runtime files.
+> Files already tracked by the target repository under `.ai/**` are project-owned overlay. Untracked files materialized from `.ai-template` are template-owned runtime files.
 
 Setup preserves the current working-tree contents of tracked `.ai/**` files, not only `HEAD`, so local edits are not silently discarded.
 
@@ -135,9 +134,11 @@ Recommended project-owned locations include:
 
 The initial adapter seeds `.ai/project/` with minimal project context files. Additional project-specific files can be tracked when needed.
 
+Materialized `.agents/skills/**` and `.cursor/commands/**` are template-owned and are not project overlay locations.
+
 ## 7. Git ignore and leak model
 
-Materialized private workflow files may exist locally. Their existence is expected.
+Materialized private workflow and tool-adapter files may exist locally. Their existence is expected.
 
 The security boundary is tracking, not filesystem presence:
 
@@ -146,7 +147,7 @@ private workflow may exist locally
 private workflow must not be committed to the target repository
 ```
 
-The repository therefore ignores known reusable materialized paths while explicitly allowing project-owned overlay paths.
+The repository therefore ignores known reusable materialized paths, including `.agents/skills/` and `.cursor/commands/`, while explicitly allowing project-owned `.ai/` overlay paths.
 
 `scripts/check-workflow-leak.sh` must fail when:
 
@@ -159,14 +160,11 @@ The check must not fail merely because setup has materialized private workflow f
 
 ## 8. Thin agent adapters
 
-`AGENTS.md`, `CLAUDE.md`, Cursor rules, and GitHub Copilot instructions are public thin adapters.
+Public bootstrap files such as `AGENTS.md`, `CLAUDE.md`, Cursor rules, and GitHub Copilot instructions remain thin adapters owned by the public integration template.
 
-They must not reproduce reusable workflow rules. Their role is to tell the agent:
+Repo-scoped tool entrypoints that must stay synchronized with the private workflow, including Codex `.agents/skills/` and Cursor `.cursor/commands/`, are owned by `szymoniwacz/ai-project-template` and materialized by setup.
 
-1. run setup when `.ai/README.md` is not materialized,
-2. treat `.ai/` as source of truth,
-3. read `.ai/README.md` first,
-4. follow the private workflow documents from `.ai/`.
+Neither class of adapter may reproduce reusable workflow rules. Their role is to direct the tool to `.ai/` and delegate to the canonical workflow documents there.
 
 ## 9. Automation loaders
 
@@ -198,7 +196,7 @@ A user without access should receive a clear setup failure and no fallback imple
 
 ## 11. Workflow upgrades
 
-Setup refreshes the configured private workflow remote and rematerializes `.ai/`:
+Setup refreshes the configured private workflow remote and rematerializes `.ai/` plus tool adapters:
 
 ```text
 ./scripts/setup-ai-workflow.sh
@@ -231,20 +229,21 @@ Tests must use a local fake private workflow fixture, never the real private rep
 
 Contract coverage includes:
 
-1. valid materialization,
-2. setup initialization behavior,
-3. setup refreshes a newer configured remote revision,
-4. fail-closed behavior when workflow is unavailable,
-5. invalid workflow structure,
-6. tracked overlay preservation,
-7. preservation of uncommitted overlay edits,
-8. stale template file deletion,
-9. idempotent repeated setup,
-10. reusable private workflow remaining untracked,
-11. leak detection for accidentally tracked private files,
-12. nested-directory invocation,
-13. workflow revision reporting,
-14. Linux and macOS CI execution.
+1. valid workflow materialization,
+2. Codex and Cursor tool-adapter materialization,
+3. setup initialization behavior,
+4. setup refreshes a newer configured remote revision,
+5. fail-closed behavior when workflow is unavailable,
+6. invalid workflow structure,
+7. tracked overlay preservation,
+8. preservation of uncommitted overlay edits,
+9. stale template file deletion,
+10. idempotent repeated setup,
+11. reusable private workflow remaining untracked,
+12. leak detection for accidentally tracked private files,
+13. nested-directory invocation,
+14. workflow revision reporting,
+15. Linux and macOS CI execution.
 
 ## 14. Invariants
 
@@ -268,7 +267,9 @@ H. Local and cloud execution use the same materialized workflow layout.
 
 I. Setup refreshes `.ai-template` from its configured remote before materialization; the gitlink may record the selected revision when committed.
 
-J. The adapter does not maintain a second runtime-delegation architecture.
+J. Tool-specific entrypoints are materialized from the private template and only delegate to `.ai/`; they do not become a second workflow source.
+
+K. The adapter does not maintain a second runtime-delegation architecture.
 
 ## 15. Out of scope
 
@@ -289,4 +290,4 @@ The desired target-repository bootstrap is intentionally small:
 ./scripts/setup-ai-workflow.sh
 ```
 
-The script initializes or updates the private submodule and materializes the workflow. The user then customizes tracked project context and can use the normal AI workflow, including `/execute-goal` and `/execute-project` when the corresponding automation environment has private-repository access.
+The script initializes or updates the private submodule and materializes the workflow plus tool adapters. The user then customizes tracked project context and can use the normal AI workflow through the supported tool entrypoints.
