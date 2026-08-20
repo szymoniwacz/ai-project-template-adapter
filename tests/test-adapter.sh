@@ -10,9 +10,10 @@ project="$tmp_root/project"
 missing_config="$tmp_root/missing-config"
 
 cp -a "$adapter_root/tests/fixtures/fake-ai-project-template" "$fixture_repo"
-mkdir -p "$fixture_repo/.agents/skills/project-intake" "$fixture_repo/.cursor/commands"
+mkdir -p "$fixture_repo/.agents/skills/project-intake" "$fixture_repo/.cursor/commands" "$fixture_repo/.ai/project"
 printf '%s\n' '---' 'name: project-intake' 'description: test adapter' '---' > "$fixture_repo/.agents/skills/project-intake/SKILL.md"
 printf '# /execute-goal\n\nDelegate to `.ai/skills/execute-goal.md`.\n' > "$fixture_repo/.cursor/commands/execute-goal.md"
+printf 'template-owned\n' > "$fixture_repo/.ai/project/template-only.md"
 git -C "$fixture_repo" init -q
 git -C "$fixture_repo" config user.email test@example.com
 git -C "$fixture_repo" config user.name Test
@@ -72,9 +73,10 @@ second="$(cd "$project" && GIT_ALLOW_PROTOCOL=file ./scripts/setup-ai-workflow.s
 assert_contains "$first" 'AI workflow ready'
 assert_contains "$second" 'AI workflow ready'
 
-printf '7. materialized private files remain untracked\n'
+printf '7. materialized private files remain untracked and ignored\n'
 tracked="$(git -C "$project" ls-files -- .ai)"
 [[ "$tracked" == '.ai/project/product-context.md' ]]
+[[ -z "$(git -C "$project" status --porcelain -- .ai)" ]]
 
 printf '8. leak check passes for clean project\n'
 (cd "$project" && ./scripts/check-workflow-leak.sh >/dev/null)
