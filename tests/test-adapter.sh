@@ -11,8 +11,10 @@ missing_config="$tmp_root/missing-config"
 
 cp -a "$adapter_root/tests/fixtures/fake-ai-project-template" "$fixture_repo"
 mkdir -p "$fixture_repo/.agents/skills/project-intake" "$fixture_repo/.cursor/commands" "$fixture_repo/.ai/project"
+mkdir -p "$fixture_repo/.gitlab/issue_templates"
 printf '%s\n' '---' 'name: project-intake' 'description: test adapter' '---' > "$fixture_repo/.agents/skills/project-intake/SKILL.md"
 printf '# /execute-goal\n\nDelegate to `.ai/skills/execute-goal.md`.\n' > "$fixture_repo/.cursor/commands/execute-goal.md"
+printf '# Agent Goal\n' > "$fixture_repo/.gitlab/issue_templates/Agent Goal.md"
 printf 'template-owned\n' > "$fixture_repo/.ai/project/template-only.md"
 git -C "$fixture_repo" init -q
 git -C "$fixture_repo" config user.email test@example.com
@@ -21,11 +23,13 @@ git -C "$fixture_repo" add .
 git -C "$fixture_repo" commit -qm initial
 
 mkdir -p "$project/scripts" "$project/.ai/project"
+mkdir -p "$project/.gitlab"
 cp "$adapter_root/scripts/setup-ai-workflow.sh" "$project/scripts/"
 cp "$adapter_root/scripts/check-workflow-leak.sh" "$project/scripts/"
 cp "$adapter_root/scripts/ai-workflow-doctor.sh" "$project/scripts/"
 cp "$adapter_root/scripts/update-ai-workflow.sh" "$project/scripts/"
 cp "$adapter_root/.gitignore" "$project/.gitignore"
+printf 'unrelated GitLab configuration\n' > "$project/.gitlab/README.md"
 cat > "$project/.ai/project/product-context.md" <<'DOC'
 # Product Context
 project-owned
@@ -34,7 +38,7 @@ DOC
 git -C "$project" init -q
 git -C "$project" config user.email test@example.com
 git -C "$project" config user.name Test
-git -C "$project" add scripts .gitignore .ai/project/product-context.md
+git -C "$project" add scripts .gitignore .ai/project/product-context.md .gitlab/README.md
 git -C "$project" commit -qm base
 
 git -C "$project" -c protocol.file.allow=always submodule add -q "$fixture_repo" .ai-template
@@ -55,6 +59,10 @@ printf '2. materializes private workflow\n'
 
 printf '3. preserves tracked project overlay\n'
 grep -q 'project-owned' "$project/.ai/project/product-context.md"
+
+printf '3a. materializes GitLab issue templates without replacing other GitLab configuration\n'
+grep -q '# Agent Goal' "$project/.gitlab/issue_templates/Agent Goal.md"
+grep -q 'unrelated GitLab configuration' "$project/.gitlab/README.md"
 
 printf '4. preserves uncommitted overlay edits\n'
 printf '# Product Context\nuncommitted-edit\n' > "$project/.ai/project/product-context.md"
@@ -128,6 +136,14 @@ checked_out_revision="$(git -C "$project/.ai-template" rev-parse HEAD)"
 [[ "$latest_revision" == "$checked_out_revision" ]]
 [[ -f "$project/.ai/updated-by-setup.md" ]]
 
+printf '13a. update delegates GitLab issue template refresh to setup\n'
+printf '# Agent Goal\n\nUpdated template.\n' > "$fixture_repo/.gitlab/issue_templates/Agent Goal.md"
+git -C "$fixture_repo" add '.gitlab/issue_templates/Agent Goal.md'
+git -C "$fixture_repo" commit -qm 'update GitLab issue template'
+(cd "$project" && GIT_ALLOW_PROTOCOL=file ./scripts/update-ai-workflow.sh >/dev/null)
+grep -q 'Updated template.' "$project/.gitlab/issue_templates/Agent Goal.md"
+grep -q 'unrelated GitLab configuration' "$project/.gitlab/README.md"
+
 printf '14. legitimate adapter filenames do not trigger leak detection\n'
 mkdir -p "$project/.cursor/rules"
 printf 'adapter\n' > "$project/.cursor/rules/ai-project-template.mdc"
@@ -149,6 +165,7 @@ assert_contains "$copied_output" 'copied private ai-project-template repository 
 printf '16. setup materializes Codex and Cursor adapters\n'
 [[ -f "$project/.agents/skills/project-intake/SKILL.md" ]]
 [[ -f "$project/.cursor/commands/execute-goal.md" ]]
-[[ -z "$(git -C "$project" status --porcelain -- .agents/skills .cursor/commands)" ]]
+[[ -f "$project/.gitlab/issue_templates/Agent Goal.md" ]]
+[[ -z "$(git -C "$project" status --porcelain -- .agents/skills .cursor/commands .gitlab/issue_templates)" ]]
 
 printf 'All adapter contract tests passed.\n'

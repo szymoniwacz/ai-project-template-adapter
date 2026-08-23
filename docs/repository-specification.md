@@ -106,7 +106,7 @@ It must:
 3. verify the private workflow has the required structure,
 4. save the target repository's tracked `.ai/**` files as project overlay,
 5. materialize `.ai-template/.ai/` into `.ai/` with deletion of stale template-owned files,
-6. materialize `.ai-template/.agents/skills/` into `.agents/skills/` and `.ai-template/.cursor/commands/` into `.cursor/commands/`,
+6. materialize `.ai-template/.agents/skills/` into `.agents/skills/`, `.ai-template/.cursor/commands/` into `.cursor/commands/`, and `.ai-template/.gitlab/issue_templates/` into `.gitlab/issue_templates/`,
 7. restore the saved project overlay over the materialized workflow,
 8. leave the target working tree with the private workflow available locally but not tracked,
 9. fail closed when the private workflow cannot be initialized, updated, or validated.
@@ -147,7 +147,7 @@ private workflow may exist locally
 private workflow must not be committed to the target repository
 ```
 
-The repository therefore ignores known reusable materialized paths, including `.agents/skills/` and `.cursor/commands/`, while explicitly allowing project-owned overlay paths.
+The repository therefore ignores known reusable materialized paths, including `.agents/skills/`, `.cursor/commands/`, and `.gitlab/issue_templates/`, while explicitly allowing project-owned overlay paths.
 
 `scripts/check-workflow-leak.sh` must fail when:
 

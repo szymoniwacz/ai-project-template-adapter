@@ -16,9 +16,10 @@ target repository
       +--> .ai/               runtime source of truth
       +--> .agents/skills/    Codex repo skills
       +--> .cursor/commands/  Cursor slash commands
+      +--> .gitlab/issue_templates/  GitLab issue templates
 ```
 
-Setup updates `.ai-template` to the latest configured remote revision, materializes the private `.ai/` tree and thin tool adapters locally, then restores project-owned tracked `.ai/**` files over the workflow.
+Setup updates `.ai-template` to the latest configured remote revision, materializes the private `.ai/` tree, thin tool adapters, and GitLab issue templates locally, then restores project-owned tracked `.ai/**` files over the workflow.
 
 Private workflow files may exist in the working tree, but they must never be committed to a public target repository.
 
