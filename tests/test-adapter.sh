@@ -171,6 +171,6 @@ printf '16. setup materializes Codex and Cursor adapters\n'
 [[ -f "$project/.cursor/commands/execute-goal.md" ]]
 [[ -f "$project/.gitlab/issue_templates/Agent Goal.md" ]]
 [[ -z "$(git -C "$project" status --porcelain -- .agents/skills .cursor/commands)" ]]
-[[ "$(git -C "$project" status --porcelain -- '.gitlab/issue_templates/Agent Goal.md')" == '?? .gitlab/issue_templates/Agent Goal.md' ]]
+[[ -n "$(git -C "$project" status --porcelain -- '.gitlab/issue_templates/Agent Goal.md')" ]]
 
 printf 'All adapter contract tests passed.\n'
