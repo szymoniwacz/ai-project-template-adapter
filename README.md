@@ -21,7 +21,7 @@ target repository
 
 Setup updates `.ai-template` to the latest configured remote revision, materializes the private `.ai/` tree, thin tool adapters, and GitLab issue templates locally, then restores project-owned tracked `.ai/**` files over the workflow.
 
-Private workflow files may exist in the working tree, but they must never be committed to a public target repository.
+Private workflow files may exist in the working tree, but they must never be committed to a public target repository. Materialized GitLab issue templates are intended to be tracked so GitLab can use them from the target repository's default branch.
 
 ## Create a project
 

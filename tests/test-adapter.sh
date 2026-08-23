@@ -63,6 +63,10 @@ grep -q 'project-owned' "$project/.ai/project/product-context.md"
 printf '3a. materializes GitLab issue templates without replacing other GitLab configuration\n'
 grep -q '# Agent Goal' "$project/.gitlab/issue_templates/Agent Goal.md"
 grep -q 'unrelated GitLab configuration' "$project/.gitlab/README.md"
+if git -C "$project" check-ignore -q '.gitlab/issue_templates/Agent Goal.md'; then
+  echo 'GitLab issue template is unexpectedly ignored' >&2
+  exit 1
+fi
 
 printf '4. preserves uncommitted overlay edits\n'
 printf '# Product Context\nuncommitted-edit\n' > "$project/.ai/project/product-context.md"
@@ -166,6 +170,7 @@ printf '16. setup materializes Codex and Cursor adapters\n'
 [[ -f "$project/.agents/skills/project-intake/SKILL.md" ]]
 [[ -f "$project/.cursor/commands/execute-goal.md" ]]
 [[ -f "$project/.gitlab/issue_templates/Agent Goal.md" ]]
-[[ -z "$(git -C "$project" status --porcelain -- .agents/skills .cursor/commands .gitlab/issue_templates)" ]]
+[[ -z "$(git -C "$project" status --porcelain -- .agents/skills .cursor/commands)" ]]
+[[ "$(git -C "$project" status --porcelain -- '.gitlab/issue_templates/Agent Goal.md')" == '?? .gitlab/issue_templates/Agent Goal.md' ]]
 
 printf 'All adapter contract tests passed.\n'

@@ -15,7 +15,6 @@
 # Materialized tool adapters from the private template.
 .agents/skills/
 .cursor/commands/
-.gitlab/issue_templates/
 
 # Local environment and secrets.
 .env
