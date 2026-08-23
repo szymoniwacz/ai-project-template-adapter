@@ -17,11 +17,12 @@ target repository
       +--> .agents/skills/    Codex repo skills
       +--> .cursor/commands/  Cursor slash commands
       +--> .gitlab/issue_templates/  GitLab issue templates
+      +--> .github/ISSUE_TEMPLATE/  GitHub issue templates
 ```
 
-Setup updates `.ai-template` to the latest configured remote revision, materializes the private `.ai/` tree, thin tool adapters, and GitLab issue templates locally, then restores project-owned tracked `.ai/**` files over the workflow.
+Setup updates `.ai-template` to the latest configured remote revision, materializes the private `.ai/` tree, thin tool adapters, and provider issue templates locally, then restores project-owned tracked `.ai/**` files over the workflow.
 
-Private workflow files may exist in the working tree, but they must never be committed to a public target repository. Materialized GitLab issue templates are intended to be tracked so GitLab can use them from the target repository's default branch.
+Private workflow files may exist in the working tree, but they must never be committed to a public target repository. Materialized GitHub and GitLab issue templates are intended to be tracked so each provider can use them from the target repository's default branch.
 
 ## Create a project
 
