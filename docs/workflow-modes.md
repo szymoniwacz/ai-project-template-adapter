@@ -84,6 +84,39 @@ Independent review is **preferred, not guaranteed**. The self-correcting loop ha
 
 Agent squash merge is possible **only** with the explicit `self-correcting-review auto-merge` option, a clean eligible review loop, applicable CI green (or no applicable CI), and no outstanding material or safety blockers. It is **not** GitHub's auto-merge queue. Default and escalated paths require human merge.
 
+## Project orchestration and recent workflow capabilities
+
+These features live in the **private workflow**, not in the public adapter:
+
+```mermaid
+flowchart TB
+    A["Authorized Project Execution issue"] --> B["Resolve current state and acquire coordination lock"]
+    B --> C["Audit alignment and choose an eligible goal"]
+    C --> D{"Dependencies verified on target branch?"}
+    D -->|"No / uncertain"| E["Block or select another ready goal"]
+    D -->|"Yes"| F["Delegate exactly one goal to Goal Executor"]
+    F --> G["Implement, validate, review and hand off PR"]
+    G --> H{"Merge completed?"}
+    H -->|"No"| I["Wait, resume or request human input"]
+    H -->|"Yes"| J["Verify default-branch CI"]
+    J -->|"Red"| K["Plan repair goal"]
+    J -->|"Green"| L["Reconcile requirements and backlog"]
+    K --> C
+    L --> C
+```
+
+| Mechanism | What it adds |
+| --- | --- |
+| **Executor coordination** | Git-ref-based ownership and pending-event reconciliation reduce duplicate concurrent runs; this is cooperative locking, not an atomic transaction across all GitHub operations |
+| **Dependency preflight** | A goal cannot start implementation just because prerequisite issues are closed; the current target-branch evidence must satisfy them |
+| **Owner amendments** | Only a verified owner's issue comment beginning exactly with `Changes:` is considered for in-scope re-evaluation; it is not new execution authorization |
+| **Project alignment** | Audits compare approved requirements with repository evidence; backlog deduplication and dependency checks limit unnecessary goals |
+| **Deferred owner validation** | Under eligible project-level self-correcting auto-merge, certain owner-only checks can be collected for a later batch; automated checks and safety gates cannot be deferred |
+
+Project Executor delegates **one goal at a time**, waits for its result and post-merge CI, and never merges PRs itself. Optional `/continue-project` resumes an already authorized project; it does not authorize a new one.
+
+The concurrent-run guard uses Python 3.9+, authenticated `gh`, and repository write permissions in the **authorized automation environment**. Public contract tests do not exercise these private runtime mechanisms.
+
 ## Related references
 
 - [Public adapter architecture](architecture.md)
