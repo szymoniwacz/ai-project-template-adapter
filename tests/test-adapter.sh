@@ -105,8 +105,17 @@ printf 'user-specific notes\n' > "$project/.ai/project/local-notes.md"
 (cd "$project" && GIT_ALLOW_PROTOCOL=file ./scripts/setup-ai-workflow.sh >/dev/null)
 grep -q 'autonomy: full' "$project/.ai/project/alignment.yaml"
 grep -q 'user-specific notes' "$project/.ai/project/local-notes.md"
-# The project config is intentionally ignored until the owner chooses to track it.
-git -C "$project" check-ignore -q .ai/project/alignment.yaml
+# The owner can commit project-specific settings without force-adding private workflow paths.
+if git -C "$project" check-ignore -q .ai/project/alignment.yaml; then
+  echo 'project alignment configuration should be explicitly trackable' >&2
+  exit 1
+fi
+git -C "$project" add .ai/project/alignment.yaml
+git -C "$project" commit -qm 'record project alignment preferences'
+printf 'project_alignment:\n  autonomy: full\n  tracked-edit: true\n' > "$project/.ai/project/alignment.yaml"
+(cd "$project" && GIT_ALLOW_PROTOCOL=file ./scripts/setup-ai-workflow.sh >/dev/null)
+grep -q 'tracked-edit: true' "$project/.ai/project/alignment.yaml"
+git -C "$project" checkout -- .ai/project/alignment.yaml
 
 printf '6. repeated setup works\n'
 first="$(cd "$project" && GIT_ALLOW_PROTOCOL=file ./scripts/setup-ai-workflow.sh)"
