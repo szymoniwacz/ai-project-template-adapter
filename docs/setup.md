@@ -13,7 +13,7 @@ This guide is for users with **read access** to the private `szymoniwacz/ai-proj
 
 This updates the private Git submodule and materializes workflow instructions to `.ai/`, agent integrations, and GitHub/GitLab issue templates. It restores your **tracked** project-specific `.ai/` files after copying the reusable workflow.
 
-**Important before running setup again:** the script uses `rsync --delete` for `.ai/`, `.agents/skills/`, `.cursor/commands/`, `.github/ISSUE_TEMPLATE/`, and `.gitlab/issue_templates/`. Files in these destinations that are not in the current private template may be removed. Only tracked `.ai/` files are restored by the project overlay. Back up custom untracked files and provider issue templates before updating.
+**Important before running setup again:** the script uses `rsync --delete` for `.ai/`, `.agents/skills/`, `.cursor/commands/`, `.github/ISSUE_TEMPLATE/`, and `.gitlab/issue_templates/`. Files in these destinations that are not in the current private template may be removed. Only tracked `.ai/` files are restored by the project overlay. Review or back up custom files and provider issue templates — **including tracked ones** — before updating. Tracked issue templates are not part of the preserved `.ai/` overlay.
 
 ## 2. Check that it works
 
