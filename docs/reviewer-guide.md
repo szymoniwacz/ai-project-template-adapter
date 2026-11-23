@@ -51,6 +51,8 @@ The private workflow includes human review by default, an opt-in self-correcting
 
 [See the workflow-mode diagrams, supported commands, and safeguards](workflow-modes.md). These diagrams document design intent; the underlying agent implementations are private.
 
+For a clear distinction between current limitations and ideas still under consideration, see [possible improvements](improvements.md).
+
 ## Trade-offs
 
 - **Private code:** the full workflow cannot be tested by public reviewers.
