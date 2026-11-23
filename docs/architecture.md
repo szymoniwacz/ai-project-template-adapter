@@ -1,25 +1,24 @@
 # Architecture
 
-The adapter uses one integration model everywhere:
+The adapter keeps **shared workflow instructions** separate from **project-specific files**.
 
 ```text
-private ai-project-template
-        |
-        v
-.ai-template git submodule (pinned revision)
-        |
-        v
-setup-ai-workflow.sh
-        |
-        v
-.ai/ runtime
-        |
-        +-- private reusable workflow
-        +-- tracked project overlay
+Private ai-project-template          Tracked project context
+       Git submodule                     (.ai/project/)
+             \                              /
+                      Setup script
+                           |
+                  Local .ai/ runtime
+                           |
+               Codex / Cursor / automation
 ```
 
-`.ai-template` is upstream workflow source. `.ai/` is runtime source of truth. Tracked `.ai/**` files are project-owned overlay; materialized reusable files remain untracked.
+- **Private submodule:** stores reusable instructions, skills, policies, and executors. Its contents are not committed to this public adapter.
+- **Setup script:** refreshes the submodule, copies workflow files locally, restores tracked project context, and creates tool/issue adapters.
+- **Local `.ai/`:** the shared entry point for agents after setup.
+- **Project overlay:** tracked project files survive updates.
+- **Cloud loaders:** delegate to the same private executor files; they do not copy executor logic.
 
-Local agents and cloud automations therefore consume the same path layout. Public agent adapters and automation loaders contain connection instructions only. Reusable workflow behavior remains exclusively in the private repository.
+If private access is missing, setup stops. The committed submodule revision can be updated separately.
 
-See `docs/repository-specification.md` for the complete contract and invariants.
+[Reviewer guide](reviewer-guide.md) · [Setup](setup.md) · [Full specification](repository-specification.md)
