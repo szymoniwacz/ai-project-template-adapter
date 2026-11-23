@@ -11,7 +11,7 @@ This page separates **verified limitations** from **ideas worth evaluating**. It
 | Private workflow compatibility | The adapter's local smoke test uses the real workflow, but public CI uses a fixture | Add a private, access-controlled integration job that tests selected workflow revisions; keep public CI independent of secrets |
 | Version updates | Setup refreshes from the configured remote; the submodule reference is committed separately | Offer an explicit pinned-revision mode for reproducible setups, without changing the default silently |
 | Custom generated files | Setup uses `rsync --delete`; only tracked `.ai/` overlay files are restored | Consider preflight warnings or preservation rules for custom/untracked files and provider issue templates |
-| Quality evidence | Adapter tests prove integration behavior, not that AI-generated code is correct | Collect reproducible examples and measurable validation outcomes in a separate demo |
+| Quality evidence | Adapter tests prove integration behavior, not that AI-generated code is correct or private executor coordination works | Collect reproducible examples and measurable validation outcomes in a separate demo |
 
 ## How these improvements relate to the architecture
 
