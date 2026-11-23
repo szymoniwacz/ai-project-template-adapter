@@ -1,28 +1,40 @@
-# Setup guide
+# Install, verify, and update
 
-This guide is for users who **already have read access** to the private `szymoniwacz/ai-project-template` repository. Without it, setup stops. Public reviewers can still [run adapter tests](../README.md#try-the-public-adapter).
+This guide is for users with **read access** to the private `szymoniwacz/ai-project-template`. Without it, production setup cannot run. External reviewers can still [test the public adapter](../README.md#run-the-public-tests).
 
-## First use
+## 1. Install
 
-1. Select **Use this template** on GitHub, create a repository, and clone it.
-2. Run:
+1. On GitHub, select **Use this template**, create a repository, and clone it.
+2. From the repository root, run:
 
    ```bash
    ./scripts/setup-ai-workflow.sh
-   ./scripts/ai-workflow-doctor.sh
-   ./scripts/check-workflow-leak.sh
    ```
 
-3. Look for `Status: ready` from the doctor.
-4. Write project context in tracked files under `.ai/project/`, starting with:
-   - `product-context.md` — what you are building
-   - `roadmap.md` — planned work
-   - `decisions.md` — important decisions
-5. Open the project in Codex or Cursor. Follow `.ai/README.md` and use the appropriate workflow commands for your task.
+This updates the private Git submodule and materializes workflow instructions to `.ai/`, agent integrations, and GitHub/GitLab issue templates. It restores your tracked project-specific files after copying the reusable workflow.
 
-Setup downloads/updates the private submodule, checks its expected files, copies the shared workflow into `.ai/`, preserves tracked project files, and materializes tool adapters and issue templates.
+## 2. Check that it works
 
-## Update
+```bash
+./scripts/ai-workflow-doctor.sh
+./scripts/check-workflow-leak.sh
+```
+
+Expect **`Status: ready`** and **`Workflow leak check: clean`**. The doctor confirms required files and executor entry points exist; it does **not** prove the agents have executed a task successfully.
+
+## 3. Configure your project
+
+Edit the tracked files in `.ai/project/`:
+
+| File | What to write |
+| --- | --- |
+| `product-context.md` | What the project is and who it serves |
+| `roadmap.md` | Goals and upcoming work |
+| `decisions.md` | Important decisions and constraints |
+
+Open your repository in Codex or Cursor, read `.ai/README.md`, and follow the commands available in your tool. For goal execution modes and required authorization, see [Workflow commands](workflow-modes.md#available-options).
+
+## 4. Update
 
 ```bash
 ./scripts/update-ai-workflow.sh
@@ -32,16 +44,25 @@ git status --short
 git diff --submodule
 ```
 
-The script fetches the configured remote revision. **It does not commit the updated submodule reference.**
+Setup intentionally fetches the configured private remote revision. The update helper reports old/new revisions but **does not commit** the new submodule reference.
 
-Review any new project-context files and GitHub/GitLab issue templates. Commit only the intended project files, provider templates, and (if desired) the submodule reference. **Never commit the copied private workflow.** Avoid `git add -A` without inspecting the file list.
+Review the changed files. You may commit intended project-specific context, provider issue templates, and an explicitly chosen submodule revision. **Never commit copied private workflow files.** Avoid `git add -A` without reviewing every staged path.
+
+## 5. Public contract tests
+
+```bash
+bash tests/test-adapter.sh
+```
+
+These tests run with a **fake private workflow** and require no credentials. CI runs on **Ubuntu only**.
 
 ## Troubleshooting
 
-| Symptom | Check |
+| Result | What to do |
 | --- | --- |
-| Private workflow unavailable | Confirm your Git credentials have read access to the private repository |
-| Doctor says `not ready` | Run setup again and read the failed check |
-| Leak check fails | Inspect the named tracked path; do not bypass the check |
+| `private AI workflow is unavailable` | Check Git credentials and read access to `szymoniwacz/ai-project-template` |
+| `Status: not ready` | Read the failed doctor check, correct it, and rerun setup |
+| `Workflow leak check` fails | Inspect the named tracked paths; do not bypass the check |
+| Extra untracked templates or context files | Review individually before staging; some provider templates are expected after setup |
 
-For security boundaries see the [repository specification](repository-specification.md). The leak check is path-based, not a full secrets scanner.
+The leak check is path-based, **not** a general secret scanner. See the [security contract](repository-specification.md#7-git-ignore-and-leak-model).
