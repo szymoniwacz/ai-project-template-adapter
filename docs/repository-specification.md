@@ -12,20 +12,20 @@ This specification replaces the earlier runtime-delegation design based on `AI_P
 
 The adapter must let a repository created from this template use the same AI workflow architecture already proven in DiffRat:
 
-```text
-target repository
-      |
-      v
-.ai-template/              private git submodule
-      |
-      v
-scripts/setup-ai-workflow.sh
-      |
-      v
-.ai/                       materialized runtime source of truth
-      |
-      +-- reusable private workflow
-      +-- project-specific tracked overlay
+```mermaid
+flowchart TB
+    subgraph target["Target repository"]
+        private[".ai-template/<br/>Private Git submodule"]
+        overlay["Tracked .ai/ files<br/>Project context"]
+        setup["setup-ai-workflow.sh"]
+        runtime[".ai/<br/>Local runtime"]
+    end
+    private --> setup
+    overlay -->|Preserve and restore| setup
+    setup -->|Materialize workflow| runtime
+    setup -->|Restore project files| runtime
+    runtime --> agents["Codex / Cursor"]
+    runtime --> automation["Cloud automation"]
 ```
 
 The design must satisfy all of the following:
@@ -140,11 +140,15 @@ The initial adapter seeds `.ai/project/` with minimal project context files. Add
 
 Materialized private workflow files may exist locally. Their existence is expected.
 
-The security boundary is tracking, not filesystem presence:
+The security boundary is **Git tracking**, not the presence of files on disk. The dashed connection below is prohibited:
 
-```text
-private workflow may exist locally
-private workflow must not be committed to the target repository
+```mermaid
+flowchart LR
+    source["Private submodule"] --> setup["Setup"]
+    setup --> local["Materialized private files<br/>Local working tree"]
+    local -.->|Must not track| public["Public Git history"]
+    project["Project-owned context"] -->|May be tracked| public
+    templates["Provider issue templates"] -->|May be tracked| public
 ```
 
 The repository therefore ignores known reusable materialized paths, including `.agents/skills/` and `.cursor/commands/`, while explicitly allowing project-owned overlay paths. GitHub and GitLab issue templates are not ignored because each provider reads them from the target repository's default branch.
