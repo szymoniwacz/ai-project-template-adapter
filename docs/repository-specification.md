@@ -209,20 +209,17 @@ After refresh, the target repository may commit the changed `.ai-template` gitli
 
 ## 12. Diagnostics
 
-The workflow doctor checks at least:
+`scripts/ai-workflow-doctor.sh` checks:
 
-- repository root,
-- `.gitmodules`,
-- `.ai-template` gitlink/configuration,
-- initialized private submodule,
-- expected private `.ai/` structure,
-- Project Executor and Goal Executor presence,
-- materialized `.ai/README.md`,
-- project overlay presence,
-- leak-check result,
-- private workflow revision when available.
+- that it can resolve the repository root,
+- that `.gitmodules` defines a submodule path named `.ai-template`,
+- that `.ai-template/.ai/README.md`, `.ai-template/.ai/automation/project-executor.md`, and `.ai-template/.ai/automation/goal-executor.md` exist,
+- that the materialized `.ai/README.md` and project-owned `.ai/project/product-context.md` exist,
+- that `scripts/check-workflow-leak.sh` succeeds.
 
-Its final state is `ready` or `not ready`.
+If the submodule has Git metadata, the doctor also reports its current short commit revision. This is informational, not an additional readiness gate.
+
+The doctor reports `Status: ready` only if all checks pass; otherwise it reports `Status: not ready`. It does **not** validate the complete private workflow structure, execute the workflow, or independently verify the submodule gitlink beyond the separate path-based leak check.
 
 ## 13. Tests
 
