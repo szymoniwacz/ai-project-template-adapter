@@ -102,7 +102,12 @@ flowchart TB
     J -->|"Red"| K["Plan repair goal"]
     J -->|"Green"| L["Reconcile requirements and backlog"]
     K --> C
-    L --> C
+    L --> M{"Another ready goal or unresolved validation?"}
+    M -->|"Ready goal"| C
+    M -->|"Owner validation due"| N["Request batched owner checks"]
+    M -->|"Completed and verified"| O["Finalize project"]
+    M -->|"Blocked"| P["Wait for decision / evidence"]
+    N --> P
 ```
 
 | Mechanism | What it adds |
