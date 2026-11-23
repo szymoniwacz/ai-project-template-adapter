@@ -53,7 +53,7 @@ bash scripts/check-workflow-leak.sh
 - [Read architecture](docs/architecture.md) — private workflow, public adapter, project overlay.
 - [Read full specification](docs/repository-specification.md) — requirements and invariants.
 
-CI runs the contract tests on **Ubuntu and macOS**; see [the CI workflow](.github/workflows/ci.yml).
+CI runs the contract tests on **Ubuntu**; see [the CI workflow](.github/workflows/ci.yml).
 
 **External reviewers should not run `./scripts/setup-ai-workflow.sh`:** it requires read access to the private `szymoniwacz/ai-project-template` repository and will stop without it.
 
