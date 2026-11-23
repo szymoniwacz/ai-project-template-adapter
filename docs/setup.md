@@ -35,7 +35,7 @@ Edit the project-owned files in `.ai/project/` (the first three are tracked by d
 | `decisions.md` | Important decisions and constraints |
 | `alignment.yaml` (seeded by private setup) | Optional project-specific alignment settings; keep default values or customize as needed |
 
-After customizing `alignment.yaml`, review its contents and explicitly commit it if the settings must persist across clones. The public adapter does not contain a copy of the private default configuration. Untracked project files are preserved locally but do **not** travel with the repository.
+`alignment.yaml` is ignored by Git by default, like other private-seeded runtime files. After customizing it, keep it local or intentionally run `git add -f .ai/project/alignment.yaml` and commit it if the settings must persist across clones. Avoid staging unreviewed private workflow content. The public adapter does not contain a copy of the private default configuration. Untracked project files are preserved locally but do **not** travel with the repository.
 
 Open your repository in Codex or Cursor, read `.ai/README.md`, and follow the commands available in your tool. For new project context files, check `.gitignore`: not every path under `.ai/project/` is automatically unignored. For goal execution modes and required authorization, see [Workflow commands](workflow-modes.md#available-options).
 
