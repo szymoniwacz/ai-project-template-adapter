@@ -10,22 +10,22 @@ This specification replaces the earlier runtime-delegation design based on `AI_P
 
 ## 1. Goals
 
-The adapter must let a repository created from this template use the same AI workflow architecture already proven in DiffRat:
+The adapter must let a repository created from this template use the following workflow integration architecture:
 
-```text
-target repository
-      |
-      v
-.ai-template/              private git submodule
-      |
-      v
-scripts/setup-ai-workflow.sh
-      |
-      v
-.ai/                       materialized runtime source of truth
-      |
-      +-- reusable private workflow
-      +-- project-specific tracked overlay
+```mermaid
+flowchart TB
+    subgraph target["Target repository"]
+        private[".ai-template/<br/>Private Git submodule"]
+        overlay["Tracked .ai/ files<br/>Project context"]
+        setup["setup-ai-workflow.sh"]
+        runtime[".ai/<br/>Local runtime"]
+    end
+    private --> setup
+    overlay -->|Preserve and restore| setup
+    setup -->|Materialize workflow| runtime
+    setup -->|Restore project files| runtime
+    runtime --> agents["Codex / Cursor"]
+    runtime --> automation["Cloud automation"]
 ```
 
 The design must satisfy all of the following:
@@ -108,10 +108,10 @@ It must:
 5. materialize `.ai-template/.ai/` into `.ai/` with deletion of stale template-owned files,
 6. materialize `.ai-template/.agents/skills/` into `.agents/skills/`, `.ai-template/.cursor/commands/` into `.cursor/commands/`, `.ai-template/.gitlab/issue_templates/` into `.gitlab/issue_templates/`, and `.ai-template/.github/ISSUE_TEMPLATE/` into `.github/ISSUE_TEMPLATE/`,
 7. restore the saved project overlay over the materialized workflow,
-8. leave the target working tree with the private workflow available locally but not tracked and provider issue templates available to commit,
+8. leave the private workflow materialized locally and ignored by default, while provider issue templates remain available to review and commit. Only explicitly allowed project context files should be tracked,
 9. fail closed when the private workflow cannot be initialized, updated, or validated.
 
-The setup command must be safe to run repeatedly.
+The setup command can be run repeatedly for template-owned files and tracked `.ai/` overlay. **It is not a general backup mechanism:** `rsync --delete` can remove untracked project files beneath `.ai/` and custom files (even tracked ones) in materialized tool/issue-template directories. Review and back up such files before refresh.
 
 ## 6. Generic project overlay
 
@@ -123,28 +123,25 @@ The generic ownership rule is:
 
 Setup preserves the current working-tree contents of tracked `.ai/**` files, not only `HEAD`, so local edits are not silently discarded.
 
-Recommended project-owned locations include:
+The default `.gitignore` explicitly unignores a **small set** of project-owned files under `.ai/project/`, plus `.ai/docs/project-requirements.md`. It does **not** automatically allow every file under `.ai/project/` or other recommended context folders.
 
-```text
-.ai/project/**
-.ai/docs/project-requirements.md
-.ai/docs/architecture-direction.md
-.ai/architecture/adr-*.md
-.ai/stack-profiles/**
-.ai/ideas/**
-```
+To track additional project context (for example ADRs or stack profiles), update `.gitignore` to unignore the directory and files, and check that the paths are allowed by `scripts/check-workflow-leak.sh`. Review the diff before committing. The leak check's path allowlist and Git's ignore rules serve different purposes.
 
-The initial adapter seeds `.ai/project/` with minimal project context files. Additional project-specific files can be tracked when needed.
+The initial adapter seeds minimal files under `.ai/project/`; each generated repository owns their content.
 
 ## 7. Git ignore and leak model
 
 Materialized private workflow files may exist locally. Their existence is expected.
 
-The security boundary is tracking, not filesystem presence:
+The security boundary is **Git tracking**, not the presence of files on disk. The dashed connection below is prohibited:
 
-```text
-private workflow may exist locally
-private workflow must not be committed to the target repository
+```mermaid
+flowchart LR
+    source["Private submodule"] --> setup["Setup"]
+    setup --> local["Materialized private files<br/>Local working tree"]
+    local -.->|Must not track| public["Public Git history"]
+    project["Project-owned context"] -->|May be tracked| public
+    templates["Provider issue templates"] -->|May be tracked| public
 ```
 
 The repository therefore ignores known reusable materialized paths, including `.agents/skills/` and `.cursor/commands/`, while explicitly allowing project-owned overlay paths. GitHub and GitLab issue templates are not ignored because each provider reads them from the target repository's default branch.
@@ -153,10 +150,9 @@ The repository therefore ignores known reusable materialized paths, including `.
 
 - reusable `.ai/**` materialized files are tracked outside the project-owned allowlist,
 - `.ai-template` is not represented as the expected gitlink when present in the repository,
-- a copied private workflow tree appears outside the submodule,
-- a tracked file exposes private workflow credentials or local authentication material.
+- an obvious root-level copy of the private workflow tree is tracked outside the submodule.
 
-The check must not fail merely because setup has materialized private workflow files in the working tree.
+This check works on **tracked paths**, not content, and must not be treated as a comprehensive protection against publishing private text. It does not detect arbitrary credentials, sensitive project data, or private text copied into otherwise allowed files. It must not fail merely because setup has materialized private workflow files locally. A separate secret scanner and human review of changed files are required before publishing code or project context.
 
 ## 8. Thin agent adapters
 
@@ -187,7 +183,7 @@ A loader may:
 
 A loader must not duplicate executor state machines, authorization rules, review rules, or merge rules.
 
-If private workflow access is unavailable, the loader must stop without repository mutation or remote write.
+If private workflow access is unavailable, the loader must not perform executor-driven repository changes or remote writes. Bootstrap may still make local Git/submodule changes before reporting a failure.
 
 ## 10. Authentication
 
@@ -197,7 +193,7 @@ Any local or cloud environment that needs the workflow must have read access to 
 
 Credentials must never be committed to the adapter or target repository. Cloud automation credentials belong in the automation provider's secret/runtime configuration.
 
-A user without access should receive a clear setup failure and no fallback implementation.
+A user without access should receive a clear setup failure and no fallback implementation. The failed command may already have made local Git/submodule changes; fail-closed here means no private executor logic runs, not an atomic rollback of bootstrap.
 
 ## 11. Workflow upgrades
 
@@ -213,48 +209,41 @@ After refresh, the target repository may commit the changed `.ai-template` gitli
 
 ## 12. Diagnostics
 
-The workflow doctor checks at least:
+`scripts/ai-workflow-doctor.sh` checks:
 
-- repository root,
-- `.gitmodules`,
-- `.ai-template` gitlink/configuration,
-- initialized private submodule,
-- expected private `.ai/` structure,
-- Project Executor and Goal Executor presence,
-- materialized `.ai/README.md`,
-- project overlay presence,
-- leak-check result,
-- private workflow revision when available.
+- that it can resolve the repository root,
+- that `.gitmodules` defines a submodule path named `.ai-template`,
+- that `.ai-template/.ai/README.md`, `.ai-template/.ai/automation/project-executor.md`, and `.ai-template/.ai/automation/goal-executor.md` exist,
+- that the materialized `.ai/README.md` and project-owned `.ai/project/product-context.md` exist,
+- that `scripts/check-workflow-leak.sh` succeeds.
 
-Its final state is `ready` or `not ready`.
+If the submodule has Git metadata, the doctor also reports its current short commit revision. This is informational, not an additional readiness gate.
+
+The doctor reports `Status: ready` only if all checks pass; otherwise it reports `Status: not ready`. It does **not** validate the complete private workflow structure, execute the workflow, or independently verify the submodule gitlink beyond the separate path-based leak check.
 
 ## 13. Tests
 
-Tests must use a local fake private workflow fixture, never the real private repository.
+Public adapter contract tests use a local fake private workflow fixture, never the real private repository.
 
 Contract coverage includes:
 
-1. valid materialization,
-2. setup initialization behavior,
-3. setup refreshes a newer configured remote revision,
-4. fail-closed behavior when workflow is unavailable,
-5. invalid workflow structure,
-6. tracked overlay preservation,
-7. preservation of uncommitted overlay edits,
-8. stale template file deletion,
-9. idempotent repeated setup,
-10. reusable private workflow remaining untracked,
-11. leak detection for accidentally tracked private files,
-12. nested-directory invocation,
-13. workflow revision reporting,
-14. Linux and macOS CI execution,
-15. Codex and Cursor adapter materialization.
+1. materialization and initialization of the submodule,
+2. refresh to a newer configured remote revision,
+3. failure when required submodule configuration is missing,
+4. preservation of tracked project overlay, including uncommitted edits,
+5. removal of stale template-owned files and successful repeated setup,
+6. rejection of selected accidentally tracked private paths,
+7. invocation from a nested directory,
+8. update-helper delegation to setup and refresh of provider templates,
+9. Codex/Cursor adapter and GitHub/GitLab issue-template materialization.
+
+The repeated-setup test confirms successful runs; it does **not** compare complete filesystem trees to prove strict idempotency. The tests do not assert the update helper's printed old/new revision summary. Ubuntu CI executes these contract tests, but does not run the real private workflow or independently exercise every missing-required-file validation path.
 
 ## 14. Invariants
 
 The following are architectural invariants:
 
-A. Private workflow contents are never tracked in a public target repository.
+A. Private workflow contents must never be tracked in a public target repository; the path-based guard alone cannot guarantee this.
 
 B. `.ai-template` is the single upstream reusable workflow source.
 
@@ -266,7 +255,7 @@ E. Updating the private workflow does not overwrite project-owned context.
 
 F. Private workflow unavailable means fail closed.
 
-G. Public loaders never implement Project Executor or Goal Executor logic.
+G. Public loaders never implement Project Executor or Goal Executor logic, including newer private coordination and state-recovery rules.
 
 H. Local and cloud execution use the same materialized workflow layout.
 

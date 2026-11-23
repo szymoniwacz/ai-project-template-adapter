@@ -1,75 +1,70 @@
-# Target Repository Setup
+# Install, verify, and update
 
-## First setup
+This guide is for users with **read access** to the private `szymoniwacz/ai-project-template`. Without it, production setup cannot run. External reviewers can still [test the public adapter](../README.md#run-the-public-tests).
 
-Create a repository from this GitHub template, clone it, then run:
+## 1. Install
 
-```bash
-./scripts/setup-ai-workflow.sh
-```
+1. On GitHub, select **Use this template**, create a repository, and clone it.
+2. From the repository root, run:
 
-The setup command:
+   ```bash
+   ./scripts/setup-ai-workflow.sh
+   ```
 
-1. verifies `.gitmodules`,
-2. initializes `.ai-template` when needed and updates it from the configured remote,
-3. validates the expected private workflow structure,
-4. saves tracked project-specific `.ai/**` files,
-5. materializes `.ai-template/.ai/` into `.ai/`,
-6. restores the project overlay,
-7. reports the private workflow revision.
+This updates the private Git submodule and materializes workflow instructions to `.ai/`, agent integrations, and GitHub/GitLab issue templates. It restores your **tracked** project-specific `.ai/` files after copying the reusable workflow.
 
-No `AI_PROJECT_TEMPLATE_HOME` environment variable is required.
+**Important before running setup again:** the script uses `rsync --delete` for `.ai/`, `.agents/skills/`, `.cursor/commands/`, `.github/ISSUE_TEMPLATE/`, and `.gitlab/issue_templates/`. Files in these destinations that are not in the current private template may be removed. Only tracked `.ai/` files are restored by the project overlay. Review or back up custom files and provider issue templates — **including tracked ones** — before updating. Tracked issue templates are not part of the preserved `.ai/` overlay.
 
-## Access requirement
-
-The local Git identity must be able to read:
-
-```text
-https://github.com/szymoniwacz/ai-project-template.git
-```
-
-If access is unavailable, setup stops. There is no public fallback workflow.
-
-## Project context
-
-The template seeds:
-
-```text
-.ai/project/product-context.md
-.ai/project/roadmap.md
-.ai/project/decisions.md
-```
-
-These files are target-owned and remain tracked. Other project-specific `.ai/**` files may be tracked according to the ownership contract in `docs/repository-specification.md`.
-
-## Verify
-
-Run:
+## 2. Check that it works
 
 ```bash
 ./scripts/ai-workflow-doctor.sh
 ./scripts/check-workflow-leak.sh
 ```
 
-## Update the workflow
+Expect **`Status: ready`** and **`Workflow leak check: clean`**. The doctor confirms required files and executor entry points exist; it does **not** prove the agents have executed a task successfully.
 
-Run setup again whenever you want to refresh the private workflow and rematerialize `.ai/`:
+## 3. Configure your project
+
+Edit the following tracked files in `.ai/project/`:
+
+| File | What to write |
+| --- | --- |
+| `product-context.md` | What the project is and who it serves |
+| `roadmap.md` | Goals and upcoming work |
+| `decisions.md` | Important decisions and constraints |
+
+Open your repository in Codex or Cursor, read `.ai/README.md`, and follow the commands available in your tool. For new project context files, check `.gitignore`: not every path under `.ai/project/` is automatically unignored. For goal execution modes and required authorization, see [Workflow commands](workflow-modes.md#available-options).
+
+## 4. Update
 
 ```bash
-./scripts/setup-ai-workflow.sh
-```
-
-`./scripts/update-ai-workflow.sh` performs the same refresh and additionally reports the old and new revisions.
-
-Then review:
-
-```bash
-git status
+./scripts/update-ai-workflow.sh
+./scripts/ai-workflow-doctor.sh
+./scripts/check-workflow-leak.sh
+git status --short
 git diff --submodule
 ```
 
-Commit the `.ai-template` gitlink only when you want the target repository to record the refreshed workflow revision. Materialized private `.ai/` files remain local and ignored.
+Setup intentionally fetches the configured private remote revision, which may differ from the submodule commit recorded in Git. The update helper reports old/new revisions but **does not commit** the new submodule reference.
 
-## Clone with submodules
+Review the changed files. You may commit intended project-specific context, provider issue templates, and an explicitly chosen submodule revision. **Never commit copied private workflow files.** Avoid `git add -A` without reviewing every staged path.
 
-`git clone --recurse-submodules ...` is supported, but not required. The setup script initializes `.ai-template` when it is absent.
+## 5. Public contract tests
+
+```bash
+bash tests/test-adapter.sh
+```
+
+These tests run with a **fake private workflow** and require no credentials. CI runs on **Ubuntu only**.
+
+## Troubleshooting
+
+| Result | What to do |
+| --- | --- |
+| `private AI workflow is unavailable` | Check Git credentials and read access to `szymoniwacz/ai-project-template` |
+| `Status: not ready` | Read the failed doctor check, correct it, and rerun setup |
+| `Workflow leak check` fails | Inspect the named tracked paths; do not bypass the check |
+| Extra untracked templates or context files | Review individually before staging; some provider templates are expected after setup |
+
+The leak check is path-based, **not** a general secret scanner. See the [security contract](repository-specification.md#7-git-ignore-and-leak-model).

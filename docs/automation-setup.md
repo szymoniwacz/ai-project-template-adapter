@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Cloud automation must use the same private workflow revision and the same materialized `.ai/` runtime as local agents. The public adapter never embeds Project Executor or Goal Executor logic.
+Cloud automation uses the same **workflow layout and upstream private source** as local agents. Because setup fetches the configured remote, separate runs can resolve different revisions unless their environments explicitly coordinate versions. The public adapter never embeds Project Executor or Goal Executor logic.
 
 ## Required access
 
@@ -13,20 +13,22 @@ An automation run needs:
 3. a workspace where the target repository can initialize its `.ai-template` submodule,
 4. provider credentials stored as runtime secrets or equivalent external configuration.
 
+Current private executor coordination also requires **Python 3.9+**, an authenticated **GitHub CLI (`gh`)**, and suitable repository contents/issues write permissions. These requirements belong to the private automation runtime; they are not needed to run the public adapter contract tests.
+
 Never commit a private-repository token, deploy key, or generated credential.
 
 ## Runtime bootstrap
 
-At the beginning of a run, before any repository mutation or remote write:
+At the beginning of a run, **before any executor-driven repository change or remote write**:
 
 1. read the appropriate public loader from the target repository default branch,
 2. ensure `.ai-template` can be initialized,
-3. run `./scripts/setup-ai-workflow.sh` when `.ai/README.md` is not already materialized,
+3. run `./scripts/setup-ai-workflow.sh` to prepare and refresh the private runtime, even when `.ai/README.md` already exists, unless the run has explicitly verified its intended workflow revision,
 4. verify the required private executor files exist under `.ai/automation/`,
 5. delegate to the private executor runtime,
-6. fail closed if any of the above cannot be completed.
+6. stop executor work and remote writes if any of the above cannot be completed. Setup may have made local submodule/worktree changes before the failure.
 
-Materialized private files under `.ai/` are workspace state only. Automation must not stage or commit them.
+Materialized private files under `.ai/` are workspace state only. Automation must not stage or commit them. The public adapter's path-based leak guard is not a secrets scanner.
 
 ## Project Executor loader
 
@@ -65,7 +67,7 @@ Before enabling production automation for a generated repository:
 3. run `./scripts/check-workflow-leak.sh`,
 4. configure the cloud environment with read access to the private submodule,
 5. run a disposable automation invocation and verify the private runtime loads,
-6. verify materialized `.ai/` files are not present in the resulting Git diff,
+6. inspect `git status --short`, `git diff --cached --name-only`, and `git ls-files -- .ai` to confirm no reusable private workflow files are staged or tracked; run `./scripts/check-workflow-leak.sh` again before any commit,
 7. only then enable normal Project Executor / Goal Executor triggers.
 
 ## Failure behavior
