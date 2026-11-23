@@ -58,7 +58,17 @@ while IFS= read -r -d '' path; do
 done < <(git -C "$ROOT" ls-files -z -- .ai)
 
 mkdir -p "$AI"
-rsync -a --delete "$TEMPLATE/.ai/" "$AI/"
+# Project configuration and context belong to the target repository, even
+# before they have been added to Git. Do not overwrite or delete them when
+# refreshing reusable workflow files.
+rsync -a --delete --exclude '/project/' "$TEMPLATE/.ai/" "$AI/"
+
+# Seed project defaults provided by the private workflow only when missing.
+# Existing project settings (for example alignment.yaml) take precedence.
+if [[ -d "$TEMPLATE/.ai/project" ]]; then
+  mkdir -p "$AI/project"
+  rsync -a --ignore-existing "$TEMPLATE/.ai/project/" "$AI/project/"
+fi
 
 for path in ".agents/skills" ".cursor/commands"; do
   mkdir -p "$ROOT/$path"
