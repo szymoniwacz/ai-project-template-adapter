@@ -83,6 +83,7 @@ git diff --submodule
 - [Architecture](docs/architecture.md) — how components fit together
 - [Workflow modes](docs/workflow-modes.md) — supervised, review, auto-merge and escalation
 - [Automation setup](docs/automation-setup.md) — private workflow access in cloud runs
+- [Current limits and possible improvements](docs/improvements.md) — what exists and what could be added
 - [Full specification](docs/repository-specification.md) — detailed contract and invariants
 
 CI runs on **Ubuntu only**. See [GitHub Actions](.github/workflows/ci.yml).
