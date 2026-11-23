@@ -26,7 +26,7 @@ Expect **`Status: ready`** and **`Workflow leak check: clean`**. The doctor conf
 
 ## 3. Configure your project
 
-Edit the following tracked files in `.ai/project/`:
+Edit the project-owned files in `.ai/project/` (the first three are tracked by default; `alignment.yaml` comes from the private workflow):
 
 | File | What to write |
 | --- | --- |
