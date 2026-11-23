@@ -1,63 +1,33 @@
-# Technical reviewer guide
+# Technical walkthrough
 
-**Purpose:** explain the design of this public adapter in a few minutes.
+**A public adapter for one private AI development workflow.** I use it to share the same instructions across projects and tools without duplicating them or losing project-specific context.
 
-## Problem and solution
+## Design in brief
 
-I use one AI-assisted development workflow in multiple projects. Copying the same instructions into each project would make updates difficult and could overwrite project-specific requirements.
-
-This adapter solves that by keeping the workflow in a private Git repository and loading it into each project. The project keeps its own tracked context.
-
-```mermaid
-flowchart TB
-    A["Private workflow"] --> C["Setup and update"]
-    B["Tracked project context"] --> C
-    C --> D["Local .ai/ instructions"]
-    D --> E["Codex / Cursor"]
-    D --> F["Cloud automation"]
-```
-
-## Design choices
-
-| Choice | Why | Code |
+| Decision | Why it matters | Inspect |
 | --- | --- | --- |
-| Private Git submodule | Reuse one source without publishing it | [`.gitmodules`](../.gitmodules) |
-| Local `.ai/` folder | Give coding tools the same instructions | [Setup](../scripts/setup-ai-workflow.sh) |
-| Tracked project files | Keep requirements and decisions across updates | [Setup](../scripts/setup-ai-workflow.sh), [Tests](../tests/test-adapter.sh) |
-| Stop when private access fails | Never silently substitute missing instructions | [Setup](../scripts/setup-ai-workflow.sh) |
-| Small automation loaders | Keep executor rules in one private source | [Goal loader](ai-workflow/goal-executor-loader.md), [Project loader](ai-workflow/project-executor-loader.md) |
-| Fake-workflow tests | Test integration without exposing private code | [Tests](../tests/test-adapter.sh) |
+| Private submodule | Reusable, versioned source without publishing private code | [Git configuration](../.gitmodules) |
+| Local `.ai/` runtime | One entry point for coding tools and automation | [Setup](../scripts/setup-ai-workflow.sh) |
+| Tracked project overlay | Requirements and decisions survive workflow updates | [Setup](../scripts/setup-ai-workflow.sh), [Tests](../tests/test-adapter.sh) |
+| Fail-closed setup | Missing private access stops the operation | [Setup](../scripts/setup-ai-workflow.sh) |
+| Thin automation loaders | Executor behavior stays in one private source | [Goal](ai-workflow/goal-executor-loader.md), [Project](ai-workflow/project-executor-loader.md) |
+| Fixture tests | Anyone can test the adapter without secrets | [Tests](../tests/test-adapter.sh), [CI](../.github/workflows/ci.yml) |
 
-## What you can verify
-
-Clone the public repo and run:
+## Verify the adapter
 
 ```bash
 bash tests/test-adapter.sh
 bash scripts/check-workflow-leak.sh
 ```
 
-The tests cover installation, updates, repeated setup, project-file preservation, error handling, and generating tool/issue adapters. [GitHub Actions](../.github/workflows/ci.yml) runs them on Ubuntu.
+Both commands are public. The tests simulate the private repository; they do not execute the real AI workflow.
 
-**Do not run production setup without private repository access.** That command is for authorized projects only.
+## See the working process
 
-## How this relates to agentic development
+[Installation, health checks, updates, and troubleshooting](setup.md) · [Review, auto-merge, supervised mode, and commands](workflow-modes.md)
 
-This code does not implement an AI coding or review agent. It provides the integration layer for a private workflow that separates implementation, validation, and review. You can inspect how I manage reusable instructions, project context, and failure handling without access to the private agent logic.
+## Important boundaries
 
-## Workflow options
+The private workflow includes separate implementation, validation, and review stages. Its implementation is **not** included here. The public leak check is path-based and does not scan secrets. Passing adapter tests does **not** establish AI code-review accuracy.
 
-The private workflow includes human review by default, an opt-in self-correcting review loop, and conditional, explicitly authorized squash merge. Independent agent review is preferred, with self-review as fallback. High-risk work escalates to human review rather than agent merge.
-
-[See the workflow-mode diagrams, supported commands, and safeguards](workflow-modes.md). These diagrams document design intent; the underlying agent implementations are private.
-
-For a clear distinction between current limitations and ideas still under consideration, see [possible improvements](improvements.md).
-
-## Trade-offs
-
-- **Private code:** the full workflow cannot be tested by public reviewers.
-- **Updates:** setup refreshes from the configured remote; the submodule commit can be recorded separately for version tracking.
-- **Security:** the leak check is path-based, not a complete secrets scan. Review public changes before publishing.
-- **Evidence:** tests prove adapter behavior with a fake workflow, not code-review accuracy.
-
-[Setup instructions](setup.md) · [Architecture](architecture.md) · [Full specification](repository-specification.md)
+[Architecture](architecture.md) · [Current limitations and improvement ideas](improvements.md) · [Detailed specification](repository-specification.md)
