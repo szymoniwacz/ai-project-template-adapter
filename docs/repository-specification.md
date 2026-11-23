@@ -234,7 +234,6 @@ Contract coverage includes:
 2. setup initialization behavior,
 3. setup refreshes a newer configured remote revision,
 4. fail-closed behavior when workflow is unavailable,
-5. missing required private workflow structure (fail-closed during setup),
 6. tracked overlay preservation,
 7. preservation of uncommitted overlay edits,
 8. stale template file deletion,
@@ -243,8 +242,10 @@ Contract coverage includes:
 11. leak detection for accidentally tracked private files,
 12. nested-directory invocation,
 13. workflow revision reporting,
-14. Linux CI execution (Ubuntu runner),
-15. Codex and Cursor adapter materialization.
+13. Linux CI execution (Ubuntu runner),
+14. Codex and Cursor adapter materialization.
+
+The current suite does **not** independently exercise every missing-required-file validation path, and it does not run the real private workflow in public CI.
 
 ## 14. Invariants
 
