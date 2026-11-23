@@ -65,7 +65,7 @@ Before enabling production automation for a generated repository:
 3. run `./scripts/check-workflow-leak.sh`,
 4. configure the cloud environment with read access to the private submodule,
 5. run a disposable automation invocation and verify the private runtime loads,
-6. verify materialized `.ai/` files are not present in the resulting Git diff,
+6. inspect `git status --short`, `git diff --cached --name-only`, and `git ls-files -- .ai` to confirm no reusable private workflow files are staged or tracked; run `./scripts/check-workflow-leak.sh` again before any commit,
 7. only then enable normal Project Executor / Goal Executor triggers.
 
 ## Failure behavior
