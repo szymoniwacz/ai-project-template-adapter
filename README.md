@@ -54,7 +54,7 @@ git status --short
 git diff --submodule
 ```
 
-Review changes before committing. **Never commit the materialized private workflow.** Setup replaces generated runtime files and provider issue templates; back up any custom, untracked files first. [Detailed setup and troubleshooting](docs/setup.md).
+Review changes before committing. **Never commit the materialized private workflow.** Setup refreshes generated runtime files and issue templates; review or back up custom files in those destinations before running it. [Detailed setup and troubleshooting](docs/setup.md).
 
 ## Review and merge modes
 
