@@ -46,7 +46,7 @@ git status --short
 git diff --submodule
 ```
 
-Setup intentionally fetches the configured private remote revision. The update helper reports old/new revisions but **does not commit** the new submodule reference.
+Setup intentionally fetches the configured private remote revision, which may differ from the submodule commit recorded in Git. The update helper reports old/new revisions but **does not commit** the new submodule reference.
 
 Review the changed files. You may commit intended project-specific context, provider issue templates, and an explicitly chosen submodule revision. **Never commit copied private workflow files.** Avoid `git add -A` without reviewing every staged path.
 
