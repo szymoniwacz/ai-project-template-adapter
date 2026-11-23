@@ -111,7 +111,7 @@ It must:
 8. leave the private workflow materialized locally and ignored by default, while provider issue templates remain available to review and commit. Only explicitly allowed project context files should be tracked,
 9. fail closed when the private workflow cannot be initialized, updated, or validated.
 
-The setup command can be run repeatedly for template-owned files and tracked `.ai/` overlay. **It is not a general backup mechanism:** `rsync --delete` can remove untracked project files beneath `.ai/` and custom files in materialized tool/issue-template directories. Review and back up such files before refresh.
+The setup command can be run repeatedly for template-owned files and tracked `.ai/` overlay. **It is not a general backup mechanism:** `rsync --delete` can remove untracked project files beneath `.ai/` and custom files (even tracked ones) in materialized tool/issue-template directories. Review and back up such files before refresh.
 
 ## 6. Generic project overlay
 
