@@ -8,14 +8,13 @@ I use one AI-assisted development workflow in multiple projects. Copying the sam
 
 This adapter solves that by keeping the workflow in a private Git repository and loading it into each project. The project keeps its own tracked context.
 
-```text
-Private workflow + Tracked project context
-                     |
-             Setup and update script
-                     |
-           Local .ai/ instructions
-                     |
-           Codex / Cursor / automation
+```mermaid
+flowchart TB
+    A["Private workflow"] --> C["Setup and update"]
+    B["Tracked project context"] --> C
+    C --> D["Local .ai/ instructions"]
+    D --> E["Codex / Cursor"]
+    D --> F["Cloud automation"]
 ```
 
 ## Design choices
@@ -45,6 +44,12 @@ The tests cover installation, updates, repeated setup, project-file preservation
 ## How this relates to agentic development
 
 This code does not implement an AI coding or review agent. It provides the integration layer for a private workflow that separates implementation, validation, and review. You can inspect how I manage reusable instructions, project context, and failure handling without access to the private agent logic.
+
+## Workflow options
+
+The private workflow includes human review by default, an opt-in self-correcting review loop, and conditional, explicitly authorized squash merge. Independent agent review is preferred, with self-review as fallback. High-risk work escalates to human review rather than agent merge.
+
+[See the workflow-mode diagrams, supported commands, and safeguards](workflow-modes.md). These diagrams document design intent; the underlying agent implementations are private.
 
 ## Trade-offs
 
