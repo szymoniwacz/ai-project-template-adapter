@@ -43,6 +43,24 @@ The diagrams simplify internal stages; actual execution follows the private auth
 
 The forms above describe authorized issue comments or supported local commands; local issue references may also be required. These modes are **opt-in where stated**. Merely including a label in a project file does not grant authorization.
 
+## Command reference
+
+These commands belong to the **private workflow** after authorized setup, not to the public adapter scripts. Tool support and issue references depend on the execution environment.
+
+| Command | Purpose |
+| --- | --- |
+| `/project-intake` or `/define-project` | Gather or organize project requirements |
+| `/execute-goal` | Run one authorized goal through a review-ready PR |
+| `/execute-project` | Orchestrate a project by delegating goals one at a time |
+| `/continue-project` | Resume an already authorized project when needed |
+| `/audit-project` | Check implemented work against accepted requirements |
+| `/plan-next-goals` | Plan missing goals while avoiding duplicate backlog work |
+| `/validate-change` | Run applicable validation gates |
+| `/review-integrated` | Review the integrated change |
+| `/run-self-correcting-review` | Run an authorized, bounded review/fix loop |
+
+Typical issue-backed forms include `/execute-goal #42` and `/execute-goal #42 self-correcting-review auto-merge`. Project-level options use `/execute-project` with the same optional mode suffixes. A slash command is not a substitute for the authorization rules defined in the private workflow.
+
 ### Review behavior
 
 ```mermaid
