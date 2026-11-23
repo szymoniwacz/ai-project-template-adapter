@@ -1,6 +1,6 @@
 # AI Project Template Adapter
 
-**One reusable AI development workflow across projects, Codex, Cursor, and automation — without copying private instructions.**
+**One reusable AI development workflow across projects, Codex, Cursor, and automation — without committing private instructions to public Git history.**
 
 I built this adapter to keep a single workflow up to date while preserving each project's requirements and decisions. The adapter is public; the workflow it loads is private.
 
@@ -54,7 +54,7 @@ git status --short
 git diff --submodule
 ```
 
-Review the changes before committing. **Never commit the materialized private workflow.** [Detailed setup and troubleshooting](docs/setup.md).
+Review changes before committing. **Never commit the materialized private workflow.** Setup replaces generated runtime files and provider issue templates; back up any custom, untracked files first. [Detailed setup and troubleshooting](docs/setup.md).
 
 ## Review and merge modes
 
