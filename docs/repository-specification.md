@@ -259,7 +259,7 @@ E. Updating the private workflow does not overwrite project-owned context.
 
 F. Private workflow unavailable means fail closed.
 
-G. Public loaders never implement Project Executor or Goal Executor logic.
+G. Public loaders never implement Project Executor or Goal Executor logic, including newer private coordination and state-recovery rules.
 
 H. Local and cloud execution use the same materialized workflow layout.
 
