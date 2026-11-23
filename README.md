@@ -72,7 +72,7 @@ flowchart LR
     F -->|"Yes + checks pass"| H["Goal Executor squash merge"]
 ```
 
-Independent agent review is preferred; self-review is the fallback. Risky changes and unresolved blockers require human involvement. **[See commands, supervised mode, safeguards, and full diagrams](docs/workflow-modes.md).**
+Independent agent review is preferred; self-review is the fallback. Risky changes and unresolved blockers require human involvement. Project orchestration also supports dependency checks, duplicate-run coordination, and evidence-backed backlog audits. **[See commands, orchestration, safeguards, and diagrams](docs/workflow-modes.md).**
 
 ## Explore the implementation
 
