@@ -15,7 +15,7 @@ flowchart TB
     D --> F["Cloud automation"]
 ```
 
-Setup refreshes the private submodule, copies its reusable files locally, restores tracked project context, and prepares tool commands and GitHub/GitLab issue templates.
+Setup refreshes the private submodule, copies its reusable files locally, preserves existing `.ai/project/` configuration and tracked project context, and prepares tool commands and GitHub/GitLab issue templates. Missing project defaults are seeded from the private workflow.
 
 ## Run the public tests
 

@@ -20,6 +20,7 @@ printf 'name: Agent Goal\n' > "$fixture_repo/.github/ISSUE_TEMPLATE/agent-goal.y
 printf 'name: Project Execution\n' > "$fixture_repo/.github/ISSUE_TEMPLATE/project-execution.yml"
 printf 'blank_issues_enabled: true\n' > "$fixture_repo/.github/ISSUE_TEMPLATE/config.yml"
 printf 'template-owned\n' > "$fixture_repo/.ai/project/template-only.md"
+printf 'project_alignment:\n  autonomy: controlled\n' > "$fixture_repo/.ai/project/alignment.yaml"
 git -C "$fixture_repo" init -q
 git -C "$fixture_repo" config user.email test@example.com
 git -C "$fixture_repo" config user.name Test
@@ -97,7 +98,32 @@ printf 'stale\n' > "$project/.ai/stale-private.md"
 (cd "$project" && GIT_ALLOW_PROTOCOL=file ./scripts/setup-ai-workflow.sh >/dev/null)
 [[ ! -e "$project/.ai/stale-private.md" ]]
 
-printf '6. repeated setup is idempotent\n'
+printf '5a. preserves customized untracked project configuration across setup\n'
+grep -q 'autonomy: controlled' "$project/.ai/project/alignment.yaml"
+printf 'project_alignment:\n  autonomy: full\n' > "$project/.ai/project/alignment.yaml"
+printf 'user-specific notes\n' > "$project/.ai/project/local-notes.md"
+(cd "$project" && GIT_ALLOW_PROTOCOL=file ./scripts/setup-ai-workflow.sh >/dev/null)
+grep -q 'autonomy: full' "$project/.ai/project/alignment.yaml"
+grep -q 'user-specific notes' "$project/.ai/project/local-notes.md"
+# Private-seeded settings remain ignored like other materialized defaults.
+git -C "$project" check-ignore -q .ai/project/alignment.yaml
+(cd "$project" && git add -A)
+if git -C "$project" ls-files --error-unmatch .ai/project/alignment.yaml >/dev/null 2>&1; then
+  echo 'project alignment configuration was staged without explicit approval' >&2
+  exit 1
+fi
+# Restore the index after the broad staging check so later fixture assertions
+# still observe newly generated issue templates as untracked.
+git -C "$project" reset -q
+# An owner can still intentionally record project-specific overrides.
+git -C "$project" add -f .ai/project/alignment.yaml
+git -C "$project" commit -qm 'record project alignment preferences'
+printf 'project_alignment:\n  autonomy: full\n  tracked-edit: true\n' > "$project/.ai/project/alignment.yaml"
+(cd "$project" && GIT_ALLOW_PROTOCOL=file ./scripts/setup-ai-workflow.sh >/dev/null)
+grep -q 'tracked-edit: true' "$project/.ai/project/alignment.yaml"
+git -C "$project" checkout -- .ai/project/alignment.yaml
+
+printf '6. repeated setup works\n'
 first="$(cd "$project" && GIT_ALLOW_PROTOCOL=file ./scripts/setup-ai-workflow.sh)"
 second="$(cd "$project" && GIT_ALLOW_PROTOCOL=file ./scripts/setup-ai-workflow.sh)"
 assert_contains "$first" 'AI workflow ready'
@@ -157,6 +183,17 @@ latest_revision="$(git -C "$fixture_repo" rev-parse HEAD)"
 checked_out_revision="$(git -C "$project/.ai-template" rev-parse HEAD)"
 [[ "$latest_revision" == "$checked_out_revision" ]]
 [[ -f "$project/.ai/updated-by-setup.md" ]]
+
+printf '13aa. private project defaults seed new files but never overwrite local config\n'
+printf 'project_alignment:\n  autonomy: controlled\n  new_default: true\n' > "$fixture_repo/.ai/project/alignment.yaml"
+printf 'added by newer private workflow\n' > "$fixture_repo/.ai/project/new-default.md"
+git -C "$fixture_repo" add .ai/project
+git -C "$fixture_repo" commit -qm 'update private project defaults'
+(cd "$project" && GIT_ALLOW_PROTOCOL=file ./scripts/setup-ai-workflow.sh >/dev/null)
+grep -q 'autonomy: full' "$project/.ai/project/alignment.yaml"
+! grep -q 'new_default' "$project/.ai/project/alignment.yaml"
+grep -q 'user-specific notes' "$project/.ai/project/local-notes.md"
+grep -q 'added by newer private workflow' "$project/.ai/project/new-default.md"
 
 printf '13a. update delegates GitLab issue template refresh to setup\n'
 printf '# Agent Goal\n\nUpdated template.\n' > "$fixture_repo/.gitlab/issue_templates/Agent Goal.md"

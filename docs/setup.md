@@ -11,9 +11,9 @@ This guide is for users with **read access** to the private `szymoniwacz/ai-proj
    ./scripts/setup-ai-workflow.sh
    ```
 
-This updates the private Git submodule and materializes workflow instructions to `.ai/`, agent integrations, and GitHub/GitLab issue templates. It restores your **tracked** project-specific `.ai/` files after copying the reusable workflow.
+This updates the private Git submodule and materializes workflow instructions to `.ai/`, agent integrations, and GitHub/GitLab issue templates. It preserves existing files in `.ai/project/` (tracked or untracked), seeds missing project defaults from the private workflow, and restores other **tracked** project-specific `.ai/` files after copying the reusable workflow.
 
-**Important before running setup again:** the script uses `rsync --delete` for `.ai/`, `.agents/skills/`, `.cursor/commands/`, `.github/ISSUE_TEMPLATE/`, and `.gitlab/issue_templates/`. Files in these destinations that are not in the current private template may be removed. Only tracked `.ai/` files are restored by the project overlay. Review or back up custom files and provider issue templates — **including tracked ones** — before updating. Tracked issue templates are not part of the preserved `.ai/` overlay.
+**Important before running setup again:** the script uses `rsync --delete` for `.ai/`, `.agents/skills/`, `.cursor/commands/`, `.github/ISSUE_TEMPLATE/`, and `.gitlab/issue_templates/`. Files in these destinations that are not in the current private template may be removed, **except files in `.ai/project/`, which setup leaves intact**. Only tracked files outside `.ai/project/` are restored by the overlay. Review or back up custom files and provider issue templates — **including tracked ones** — before updating. Tracked issue templates are not part of the preserved `.ai/` overlay.
 
 ## 2. Check that it works
 
@@ -26,13 +26,16 @@ Expect **`Status: ready`** and **`Workflow leak check: clean`**. The doctor conf
 
 ## 3. Configure your project
 
-Edit the following tracked files in `.ai/project/`:
+Edit the project-owned files in `.ai/project/` (the first three are tracked by default; `alignment.yaml` comes from the private workflow):
 
 | File | What to write |
 | --- | --- |
 | `product-context.md` | What the project is and who it serves |
 | `roadmap.md` | Goals and upcoming work |
 | `decisions.md` | Important decisions and constraints |
+| `alignment.yaml` (seeded by private setup) | Optional project-specific alignment settings; keep default values or customize as needed |
+
+`alignment.yaml` is ignored by Git by default, like other private-seeded runtime files. After customizing it, keep it local or intentionally run `git add -f .ai/project/alignment.yaml` and commit it if the settings must persist across clones. Avoid staging unreviewed private workflow content. The public adapter does not contain a copy of the private default configuration. Untracked project files are preserved locally but do **not** travel with the repository.
 
 Open your repository in Codex or Cursor, read `.ai/README.md`, and follow the commands available in your tool. For new project context files, check `.gitignore`: not every path under `.ai/project/` is automatically unignored. For goal execution modes and required authorization, see [Workflow commands](workflow-modes.md#available-options).
 
