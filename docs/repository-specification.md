@@ -122,9 +122,9 @@ The generic ownership rule is:
 
 > Existing files under `.ai/project/` belong to the target project and are preserved, whether tracked or not. Missing files there may be seeded from the private workflow. Outside `.ai/project/`, only tracked `.ai/**` files are preserved as project-owned overlay; other materialized files are refreshable runtime.
 
-Setup preserves the current working-tree contents of tracked `.ai/**` files, not only `HEAD`, so local edits are not silently discarded. Untracked `.ai/project/` files also survive setup, but must be explicitly committed to persist across clones.
+Setup preserves the current working-tree contents of tracked `.ai/**` files, not only `HEAD`, so local edits are not silently discarded. Untracked `.ai/project/` files also survive setup, but must be explicitly committed to persist across clones; ignored files require an intentional `git add -f` or a project-specific `.gitignore` change.
 
-The default `.gitignore` explicitly unignores a **small set** of project-owned files under `.ai/project/` (including `alignment.yaml` for intentional project-specific settings), plus `.ai/docs/project-requirements.md`. It does **not** automatically allow every file under `.ai/project/` or other recommended context folders.
+The default `.gitignore` explicitly unignores a **small set** of project-owned files under `.ai/project/`, plus `.ai/docs/project-requirements.md`. Private-seeded `alignment.yaml` remains ignored by default. After customization, a project owner can explicitly track it with `git add -f .ai/project/alignment.yaml`, after reviewing its contents. It does **not** automatically allow every file under `.ai/project/` or other recommended context folders.
 
 To track additional project context (for example ADRs or stack profiles), update `.gitignore` to unignore the directory and files, and check that the paths are allowed by `scripts/check-workflow-leak.sh`. Review the diff before committing. The leak check's path allowlist and Git's ignore rules serve different purposes.
 
