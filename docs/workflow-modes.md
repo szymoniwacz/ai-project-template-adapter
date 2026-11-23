@@ -71,5 +71,6 @@ Agent squash merge is possible **only** with the explicit `self-correcting-revie
 - [Public adapter architecture](architecture.md)
 - [Technical reviewer guide](reviewer-guide.md)
 - [Setup instructions](setup.md)
+- [Limitations and possible improvements](improvements.md)
 
 **Visibility boundary:** this page intentionally describes mode names and observable control flow only. The private prompts, policies, internal executor state machines, and implementation remain in the private repository.
