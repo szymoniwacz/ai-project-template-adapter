@@ -2,7 +2,7 @@
 
 This file is a public loader only. It does not implement Goal Executor behavior.
 
-Before any repository mutation or remote write:
+Before any **executor-driven** repository mutation or remote write (setup itself can update the local submodule/worktree):
 
 1. Resolve the target repository default branch and current workspace.
 2. Run `./scripts/setup-ai-workflow.sh` in the authorized workspace to initialize/refresh the private submodule and materialize the runtime. The required private-repository access must already be configured.
