@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Cloud automation must use the same private workflow revision and the same materialized `.ai/` runtime as local agents. The public adapter never embeds Project Executor or Goal Executor logic.
+Cloud automation uses the same **workflow layout and upstream private source** as local agents. Because setup fetches the configured remote, separate runs can resolve different revisions unless their environments explicitly coordinate versions. The public adapter never embeds Project Executor or Goal Executor logic.
 
 ## Required access
 
@@ -17,16 +17,16 @@ Never commit a private-repository token, deploy key, or generated credential.
 
 ## Runtime bootstrap
 
-At the beginning of a run, before any repository mutation or remote write:
+At the beginning of a run, **before any executor-driven repository change or remote write**:
 
 1. read the appropriate public loader from the target repository default branch,
 2. ensure `.ai-template` can be initialized,
-3. run `./scripts/setup-ai-workflow.sh` when `.ai/README.md` is not already materialized,
+3. run `./scripts/setup-ai-workflow.sh` to prepare and refresh the private runtime, even when `.ai/README.md` already exists, unless the run has explicitly verified its intended workflow revision,
 4. verify the required private executor files exist under `.ai/automation/`,
 5. delegate to the private executor runtime,
-6. fail closed if any of the above cannot be completed.
+6. stop executor work and remote writes if any of the above cannot be completed. Setup may have made local submodule/worktree changes before the failure.
 
-Materialized private files under `.ai/` are workspace state only. Automation must not stage or commit them.
+Materialized private files under `.ai/` are workspace state only. Automation must not stage or commit them. The public adapter's path-based leak guard is not a secrets scanner.
 
 ## Project Executor loader
 
