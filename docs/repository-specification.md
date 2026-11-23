@@ -105,13 +105,14 @@ It must:
 2. initialize `.ai-template` when needed and update it from the configured remote,
 3. verify the private workflow has the required structure,
 4. save the target repository's tracked `.ai/**` files as project overlay,
-5. materialize `.ai-template/.ai/` into `.ai/` with deletion of stale template-owned files,
-6. materialize `.ai-template/.agents/skills/` into `.agents/skills/`, `.ai-template/.cursor/commands/` into `.cursor/commands/`, `.ai-template/.gitlab/issue_templates/` into `.gitlab/issue_templates/`, and `.ai-template/.github/ISSUE_TEMPLATE/` into `.github/ISSUE_TEMPLATE/`,
-7. restore the saved project overlay over the materialized workflow,
-8. leave the private workflow materialized locally and ignored by default, while provider issue templates remain available to review and commit. Only explicitly allowed project context files should be tracked,
-9. fail closed when the private workflow cannot be initialized, updated, or validated.
+5. materialize `.ai-template/.ai/` into `.ai/`, deleting stale template-owned files **outside** `.ai/project/` while preserving all existing project files there,
+6. seed missing files under `.ai/project/` from the private workflow without overwriting existing files,
+7. materialize `.ai-template/.agents/skills/` into `.agents/skills/`, `.ai-template/.cursor/commands/` into `.cursor/commands/`, `.ai-template/.gitlab/issue_templates/` into `.gitlab/issue_templates/`, and `.ai-template/.github/ISSUE_TEMPLATE/` into `.github/ISSUE_TEMPLATE/`,
+8. restore the saved project overlay over the materialized workflow,
+9. leave the private workflow materialized locally and ignored by default, while provider issue templates remain available to review and commit. Only explicitly allowed project context files should be tracked,
+10. fail closed when the private workflow cannot be initialized, updated, or validated.
 
-The setup command can be run repeatedly for template-owned files and tracked `.ai/` overlay. **It is not a general backup mechanism:** `rsync --delete` can remove untracked project files beneath `.ai/` and custom files (even tracked ones) in materialized tool/issue-template directories. Review and back up such files before refresh.
+The setup command can be run repeatedly. **It is not a general backup mechanism:** `rsync --delete` can remove untracked project files beneath `.ai/` **outside `.ai/project/`**, and custom files (even tracked ones) in materialized tool/issue-template directories. Files already present in `.ai/project/` are not deleted or overwritten; missing project defaults are seeded from the private source. Review and back up such files before refresh.
 
 ## 6. Generic project overlay
 
@@ -119,11 +120,11 @@ The adapter must not contain DiffRat-specific filenames or paths.
 
 The generic ownership rule is:
 
-> Files already tracked by the target repository under `.ai/**` are project-owned overlay. Untracked files materialized from `.ai-template/.ai/` are template-owned runtime files.
+> Existing files under `.ai/project/` belong to the target project and are preserved, whether tracked or not. Missing files there may be seeded from the private workflow. Outside `.ai/project/`, only tracked `.ai/**` files are preserved as project-owned overlay; other materialized files are refreshable runtime.
 
-Setup preserves the current working-tree contents of tracked `.ai/**` files, not only `HEAD`, so local edits are not silently discarded.
+Setup preserves the current working-tree contents of tracked `.ai/**` files, not only `HEAD`, so local edits are not silently discarded. Untracked `.ai/project/` files also survive setup, but must be explicitly committed to persist across clones.
 
-The default `.gitignore` explicitly unignores a **small set** of project-owned files under `.ai/project/`, plus `.ai/docs/project-requirements.md`. It does **not** automatically allow every file under `.ai/project/` or other recommended context folders.
+The default `.gitignore` explicitly unignores a **small set** of project-owned files under `.ai/project/` (including `alignment.yaml` for intentional project-specific settings), plus `.ai/docs/project-requirements.md`. It does **not** automatically allow every file under `.ai/project/` or other recommended context folders.
 
 To track additional project context (for example ADRs or stack profiles), update `.gitignore` to unignore the directory and files, and check that the paths are allowed by `scripts/check-workflow-leak.sh`. Review the diff before committing. The leak check's path allowlist and Git's ignore rules serve different purposes.
 
