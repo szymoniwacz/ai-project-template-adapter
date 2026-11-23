@@ -2,15 +2,15 @@
 
 The adapter keeps **shared workflow instructions** separate from **project-specific files**.
 
-```text
-Private ai-project-template          Tracked project context
-       Git submodule                     (.ai/project/)
-             \                              /
-                      Setup script
-                           |
-                  Local .ai/ runtime
-                           |
-               Codex / Cursor / automation
+```mermaid
+flowchart TB
+    A["Private workflow<br/>Git submodule"] --> C["Setup script"]
+    B["Project-owned context<br/>Tracked files"] --> C
+    C --> D["Local .ai/ runtime"]
+    D --> E["Codex / Cursor"]
+    D --> F["Cloud automation loaders"]
+    E --> G["Private workflow procedures"]
+    F --> G
 ```
 
 - **Private submodule:** stores reusable instructions, skills, policies, and executors. Its contents are not committed to this public adapter.
@@ -21,4 +21,4 @@ Private ai-project-template          Tracked project context
 
 If private access is missing, setup stops. The committed submodule revision can be updated separately.
 
-[Reviewer guide](reviewer-guide.md) · [Setup](setup.md) · [Full specification](repository-specification.md)
+[Workflow mode diagrams](workflow-modes.md) · [Reviewer guide](reviewer-guide.md) · [Setup](setup.md) · [Full specification](repository-specification.md)
