@@ -112,6 +112,9 @@ if git -C "$project" ls-files --error-unmatch .ai/project/alignment.yaml >/dev/n
   echo 'project alignment configuration was staged without explicit approval' >&2
   exit 1
 fi
+# Restore the index after the broad staging check so later fixture assertions
+# still observe newly generated issue templates as untracked.
+git -C "$project" reset -q
 # An owner can still intentionally record project-specific overrides.
 git -C "$project" add -f .ai/project/alignment.yaml
 git -C "$project" commit -qm 'record project alignment preferences'
