@@ -26,6 +26,12 @@ Both commands are public. The tests simulate the private repository; they do not
 
 [Installation, health checks, updates, and troubleshooting](setup.md) · [Review, auto-merge, supervised mode, and commands](workflow-modes.md)
 
+## Why the workflow matters
+
+The private workflow goes beyond prompting an AI to write code. It coordinates an authorized issue-to-PR process: dependency preflight, scoped implementation, validation, review, CI stabilization, and human-controlled or explicitly authorized merge. Project execution also handles concurrency, recovery, and evidence-backed audits.
+
+[See the execution modes and project orchestration diagram](workflow-modes.md#project-orchestration-and-recent-workflow-capabilities).
+
 ## Important boundaries
 
 The private workflow includes separate implementation, validation, and review stages. Its implementation is **not** included here. The public leak check is path-based and does not scan secrets. Passing adapter tests does **not** establish AI code-review accuracy.
