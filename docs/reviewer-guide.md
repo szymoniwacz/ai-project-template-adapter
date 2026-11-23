@@ -1,70 +1,70 @@
-# Technical overview for reviewers
+# Technical reviewer guide
 
-This repository is a **public integration adapter**, not the AI development workflow itself. It demonstrates how I connect a reusable, privately maintained AI workflow to multiple project repositories and coding tools without copying its implementation into those projects.
+**Reading time: about 3 minutes.** This public repository is the integration layer for a private AI-assisted software development workflow.
 
-## What problem does it solve?
+## The problem
 
-I want the same workflow instructions to work across repositories, local coding agents and cloud automation, while keeping project-specific requirements and decisions under version control. I also want workflow upgrades to preserve those project-specific files.
+As I started using the same AI-assisted development process in different projects, I wanted to avoid copying and maintaining instructions separately in each repository and coding tool. At the same time, project-specific requirements and decisions needed to remain version-controlled and survive workflow upgrades.
 
-The adapter separates three concerns:
-
-1. **Private reusable workflow** — prompts, policies, skills, executors and review instructions (not published here).
-2. **Public adapter** — setup, updates, diagnostics, integration contracts and protection against accidentally committing private workflow files.
-3. **Project context** — tracked requirements, decisions and other project-owned files, overlaid on the locally materialized workflow.
+## The design
 
 ```text
-                         public target repository
-                                   |
-                +------------------+------------------+
-                |                                     |
-        tracked project context             .ai-template submodule
-          (.ai/project/**)                   (private workflow)
-                |                                     |
-                +------------------+------------------+
-                                   |
-                       setup-ai-workflow.sh
-                                   |
-                        materialized .ai/ runtime
-                                   |
-                    +--------------+--------------+
-                    |                             |
-            local coding tools              cloud automation
-            (Codex / Cursor)              (private executors)
+                  target repository
+              +-----------+------------+
+              |                        |
+         .ai/project/              .ai-template
+         project context           private submodule
+              |                        |
+              +-----------+------------+
+                          |
+                 setup-ai-workflow.sh
+                          |
+                  local .ai/ runtime
+                          |
+               Codex / Cursor / automation
 ```
 
-## Key engineering decisions
+There are three clear ownership boundaries:
 
-| Decision | Why it matters | Where to inspect |
+1. **Private workflow:** reusable instructions, skills, review policies and executors.
+2. **Public adapter (this repository):** setup, diagnostics, local tool integrations, public automation loaders, and contract tests.
+3. **Project-owned files:** tracked context such as requirements and decisions, preserved when the workflow is refreshed.
+
+## Engineering decisions worth reviewing
+
+| Choice | Motivation | Evidence |
 | --- | --- | --- |
-| Private Git submodule | The public repository points to a versioned workflow without publishing its contents | `.gitmodules`, `docs/repository-specification.md` |
-| Project-owned overlay | Refreshing reusable instructions must not overwrite tracked project requirements and decisions | `scripts/setup-ai-workflow.sh` |
-| One local source of truth | Integrations refer to materialized `.ai/` instead of maintaining separate copies of reusable instructions | `AGENTS.md`, `CLAUDE.md`, `docs/architecture.md` |
-| Fail-closed setup | Missing private workflow access stops setup instead of silently replacing it with incomplete logic | `scripts/setup-ai-workflow.sh` |
-| Leak check | Rejects tracked reusable workflow paths and certain copies of private content | `scripts/check-workflow-leak.sh` |
-| Contract tests | Checks setup, updates, overlay preservation, failure cases and integration materialization against a fake private workflow | `tests/test-adapter.sh` |
+| Private Git submodule | Reuse a versioned source without publishing its contents | [`.gitmodules`](../.gitmodules) |
+| Materialize into `.ai/` | Give different tools one local entry point | [setup script](../scripts/setup-ai-workflow.sh), [agent entry point](../AGENTS.md) |
+| Preserve tracked project context | Avoid overwriting requirements or decisions during updates | [setup script](../scripts/setup-ai-workflow.sh), [contract tests](../tests/test-adapter.sh) |
+| Explicit failure when private source is missing | Avoid silently running an incomplete or inconsistent workflow | [setup script](../scripts/setup-ai-workflow.sh) |
+| Keep automation loaders thin | Avoid duplicating private executor logic in public files | [Project Executor loader](ai-workflow/project-executor-loader.md), [Goal Executor loader](ai-workflow/goal-executor-loader.md) |
+| Test with a fake private workflow | Make the integration independently testable without publishing private source | [tests](../tests/test-adapter.sh), [CI](../.github/workflows/ci.yml) |
 
-## What you can review without private access
+## Verify in two commands
 
-- Read the public shell scripts and the integration contract.
-- Examine the architecture and public automation loaders under `docs/`.
-- Run `bash tests/test-adapter.sh` on macOS or Linux. Tests use a local fake private workflow, not my real private repository.
-- Run `bash scripts/check-workflow-leak.sh` to inspect the tracked-file leak guard.
-- Inspect `.github/workflows/ci.yml` for the CI test configuration.
+No private access is required for the contract tests:
 
-The setup command `./scripts/setup-ai-workflow.sh` **requires access to my private workflow** and is **not expected to work for external reviewers**.
+```bash
+bash tests/test-adapter.sh
+bash scripts/check-workflow-leak.sh
+```
 
-## Scope and limitations
+The tests cover setup/refresh, idempotency, tracked overlay preservation, stale-file removal, failure scenarios, provider issue-template generation and Codex/Cursor adapter materialization. CI runs the test suite on Ubuntu and macOS.
 
-- This is an **adapter/infrastructure example**, not an executable public demo of my full agentic development process.
-- The actual Project Executor, Goal Executor, code-review instructions and validation policies are private, so this repository alone does not demonstrate their behavior.
-- The leak check covers specific tracked paths and cases. It is not a comprehensive secrets scanner or proof that arbitrary project files are safe to publish.
-- The repo's test suite verifies the adapter contract using fixtures; it does not validate AI-generated code quality or production correctness.
-- The repository stores a pinned private submodule revision, but setup intentionally refreshes that submodule from its configured remote. The pinned commit may therefore be older than the private workflow currently used in my projects. This repository alone does not prove compatibility with the latest private workflow revision.
-- The leak guard is path-based and does not scan file contents for secrets. Check public diffs and use a dedicated secrets scanner before publication.
-- The public repository reflects the version committed here; the private workflow may evolve independently.
+**Do not run the production setup script without private access.** It is designed to fail if the private submodule cannot be loaded.
 
-## Why I built it
+## How this relates to AI-assisted engineering
 
-I wanted a maintainable way to share one evolving workflow between projects and tools while preserving each project's context. It reflects an engineering approach I also apply when using AI coding agents: explicit boundaries, reproducible setup, deterministic checks where possible, and clear failure behavior.
+This adapter is not the agent that writes or reviews code. It is the infrastructure that makes a shared workflow reusable and keeps the boundary between reusable instructions and project-specific context explicit.
 
-For implementation details, see [repository specification](repository-specification.md) and [setup guide](setup.md).
+In the private workflow, implementation and review are separate stages, with quality gates and human-decision boundaries. Those internal procedures are intentionally **not published** in this adapter; this repository is evidence of integration design, not proof that AI review reliably catches every defect.
+
+## Trade-offs and limitations
+
+- **Private access requirement:** external reviewers cannot run the actual workflow; they *can* inspect and test this adapter.
+- **Freshness vs reproducibility:** setup fetches the configured remote revision. The gitlink can record the selected revision, but updating it is a separate, explicit action.
+- **Path-based leak check:** catches selected accidental commits, not arbitrary secrets or sensitive contents. Publication still needs human review and a separate secret scan.
+- **Test scope:** public contract tests use a fake workflow. They do not test actual model behavior or production correctness.
+
+For technical details, see the [full repository specification](repository-specification.md) and [cloud automation contract](automation-setup.md).
