@@ -10,7 +10,7 @@ This specification replaces the earlier runtime-delegation design based on `AI_P
 
 ## 1. Goals
 
-The adapter must let a repository created from this template use the same AI workflow architecture already proven in DiffRat:
+The adapter must let a repository created from this template use the following workflow integration architecture:
 
 ```mermaid
 flowchart TB
@@ -108,7 +108,7 @@ It must:
 5. materialize `.ai-template/.ai/` into `.ai/` with deletion of stale template-owned files,
 6. materialize `.ai-template/.agents/skills/` into `.agents/skills/`, `.ai-template/.cursor/commands/` into `.cursor/commands/`, `.ai-template/.gitlab/issue_templates/` into `.gitlab/issue_templates/`, and `.ai-template/.github/ISSUE_TEMPLATE/` into `.github/ISSUE_TEMPLATE/`,
 7. restore the saved project overlay over the materialized workflow,
-8. leave the target working tree with the private workflow available locally but not tracked and provider issue templates available to commit,
+8. leave the private workflow materialized locally and ignored by default, while provider issue templates remain available to review and commit. Only explicitly allowed project context files should be tracked,
 9. fail closed when the private workflow cannot be initialized, updated, or validated.
 
 The setup command must be safe to run repeatedly.
@@ -123,18 +123,11 @@ The generic ownership rule is:
 
 Setup preserves the current working-tree contents of tracked `.ai/**` files, not only `HEAD`, so local edits are not silently discarded.
 
-Recommended project-owned locations include:
+The default `.gitignore` explicitly unignores a **small set** of project-owned files under `.ai/project/`, plus `.ai/docs/project-requirements.md`. It does **not** automatically allow every file under `.ai/project/` or other recommended context folders.
 
-```text
-.ai/project/**
-.ai/docs/project-requirements.md
-.ai/docs/architecture-direction.md
-.ai/architecture/adr-*.md
-.ai/stack-profiles/**
-.ai/ideas/**
-```
+To track additional project context (for example ADRs or stack profiles), update `.gitignore` to unignore the directory and files, and check that the paths are allowed by `scripts/check-workflow-leak.sh`. Review the diff before committing. The leak check's path allowlist and Git's ignore rules serve different purposes.
 
-The initial adapter seeds `.ai/project/` with minimal project context files. Additional project-specific files can be tracked when needed.
+The initial adapter seeds minimal files under `.ai/project/`; each generated repository owns their content.
 
 ## 7. Git ignore and leak model
 
@@ -159,7 +152,7 @@ The repository therefore ignores known reusable materialized paths, including `.
 - `.ai-template` is not represented as the expected gitlink when present in the repository,
 - an obvious root-level copy of the private workflow tree is tracked outside the submodule.
 
-The check is **path-based**, not content-based. It does not detect arbitrary credentials, sensitive project data, or private text copied into otherwise allowed files. It must not fail merely because setup has materialized private workflow files locally. A separate secret scanner and human review of changed files are required before publishing code or project context.
+This check works on **tracked paths**, not content, and must not be treated as a comprehensive protection against publishing private text. It does not detect arbitrary credentials, sensitive project data, or private text copied into otherwise allowed files. It must not fail merely because setup has materialized private workflow files locally. A separate secret scanner and human review of changed files are required before publishing code or project context.
 
 ## 8. Thin agent adapters
 
@@ -190,7 +183,7 @@ A loader may:
 
 A loader must not duplicate executor state machines, authorization rules, review rules, or merge rules.
 
-If private workflow access is unavailable, the loader must stop without repository mutation or remote write.
+If private workflow access is unavailable, the loader must not perform executor-driven repository changes or remote writes. Bootstrap may still make local Git/submodule changes before reporting a failure.
 
 ## 10. Authentication
 
@@ -233,7 +226,7 @@ Its final state is `ready` or `not ready`.
 
 ## 13. Tests
 
-Tests must use a local fake private workflow fixture, never the real private repository.
+Public adapter contract tests use a local fake private workflow fixture, never the real private repository.
 
 Contract coverage includes:
 
@@ -241,7 +234,7 @@ Contract coverage includes:
 2. setup initialization behavior,
 3. setup refreshes a newer configured remote revision,
 4. fail-closed behavior when workflow is unavailable,
-5. invalid workflow structure,
+5. missing required private workflow structure (fail-closed during setup),
 6. tracked overlay preservation,
 7. preservation of uncommitted overlay edits,
 8. stale template file deletion,
@@ -257,7 +250,7 @@ Contract coverage includes:
 
 The following are architectural invariants:
 
-A. Private workflow contents are never tracked in a public target repository.
+A. Private workflow contents must never be tracked in a public target repository; the path-based guard alone cannot guarantee this.
 
 B. `.ai-template` is the single upstream reusable workflow source.
 
