@@ -2,6 +2,12 @@
 
 Public GitHub template for using the private `szymoniwacz/ai-project-template` workflow without publishing its reusable workflow files.
 
+## For technical reviewers
+
+If you are evaluating this repository as an engineering example, start with the [technical overview for reviewers](docs/reviewer-guide.md). It explains the architecture, engineering trade-offs, what you can verify without private access, and the limits of this public adapter.
+
+This repository does **not** publish my private AI workflow or provide a runnable public demo of its agentic code-review process.
+
 ## How it works
 
 ```text
