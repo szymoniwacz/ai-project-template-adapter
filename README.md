@@ -8,7 +8,7 @@ I built this adapter to connect my private workflow to Codex, Cursor, and cloud 
 
 ## How it works
 
- ```mermaid
+```mermaid
 flowchart TB
     A["Private reusable workflow<br/>Git submodule"] --> C["Setup and updates"]
     B["Tracked project context<br/>Requirements and decisions"] --> C
