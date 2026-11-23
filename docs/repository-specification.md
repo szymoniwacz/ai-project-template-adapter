@@ -246,7 +246,7 @@ Contract coverage includes:
 11. leak detection for accidentally tracked private files,
 12. nested-directory invocation,
 13. workflow revision reporting,
-14. Linux and macOS CI execution,
+14. Linux CI execution (Ubuntu runner),
 15. Codex and Cursor adapter materialization.
 
 ## 14. Invariants
