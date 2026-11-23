@@ -105,12 +105,15 @@ printf 'user-specific notes\n' > "$project/.ai/project/local-notes.md"
 (cd "$project" && GIT_ALLOW_PROTOCOL=file ./scripts/setup-ai-workflow.sh >/dev/null)
 grep -q 'autonomy: full' "$project/.ai/project/alignment.yaml"
 grep -q 'user-specific notes' "$project/.ai/project/local-notes.md"
-# The owner can commit project-specific settings without force-adding private workflow paths.
-if git -C "$project" check-ignore -q .ai/project/alignment.yaml; then
-  echo 'project alignment configuration should be explicitly trackable' >&2
+# Private-seeded settings remain ignored like other materialized defaults.
+git -C "$project" check-ignore -q .ai/project/alignment.yaml
+(cd "$project" && git add -A)
+if git -C "$project" ls-files --error-unmatch .ai/project/alignment.yaml >/dev/null 2>&1; then
+  echo 'project alignment configuration was staged without explicit approval' >&2
   exit 1
 fi
-git -C "$project" add .ai/project/alignment.yaml
+# An owner can still intentionally record project-specific overrides.
+git -C "$project" add -f .ai/project/alignment.yaml
 git -C "$project" commit -qm 'record project alignment preferences'
 printf 'project_alignment:\n  autonomy: full\n  tracked-edit: true\n' > "$project/.ai/project/alignment.yaml"
 (cd "$project" && GIT_ALLOW_PROTOCOL=file ./scripts/setup-ai-workflow.sh >/dev/null)
