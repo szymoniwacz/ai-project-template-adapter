@@ -1,61 +1,39 @@
 # AI Project Template Adapter
 
-**Use one AI development workflow across projects and coding tools, while keeping the workflow private.**
+**One reusable AI development workflow across projects, Codex, Cursor, and automation — without copying private instructions.**
 
-I built this adapter to connect my private workflow to Codex, Cursor, and cloud automation. Each project keeps its own requirements and decisions, even when the shared workflow changes.
-
-**What this repository shows:** the integration design, shell scripts, and automated tests. The private AI agents and their review logic are not included.
+I built this adapter to keep a single workflow up to date while preserving each project's requirements and decisions. The adapter is public; the workflow it loads is private.
 
 ## How it works
 
 ```mermaid
 flowchart TB
-    A["Private reusable workflow<br/>Git submodule"] --> C["Setup and updates"]
+    A["Private workflow<br/>Git submodule"] --> C["Setup script"]
     B["Tracked project context<br/>Requirements and decisions"] --> C
     C --> D["Local .ai/ runtime"]
-    D --> E["Codex and Cursor"]
+    D --> E["Codex / Cursor"]
     D --> F["Cloud automation"]
 ```
 
-The setup script downloads the private workflow, puts its instructions in `.ai/`, restores tracked project files, and sets up tool adapters and GitHub/GitLab issue templates.
+Setup refreshes the private submodule, copies its reusable files locally, restores tracked project context, and prepares tool commands and GitHub/GitLab issue templates.
 
-## Workflow options
+## Run the public tests
 
-The private workflow supports **human review by default**, plus explicitly authorized self-correcting review and conditional auto-merge.
-
-```mermaid
-flowchart LR
-    A["Validated change + PR"] --> B{"Mode"}
-    B -->|"Default"| C["Human review + merge"]
-    B -->|"Self-correcting"| D["Review / fix / revalidate"]
-    D --> E{"Eligible and clean?"}
-    E -->|"No"| C
-    E -->|"Yes"| F{"Auto-merge authorized?"}
-    F -->|"No"| G["Human merge"]
-    F -->|"Yes + all checks pass"| H["Goal Executor squash merge"]
-```
-
-Independent review is preferred; self-review is the fallback. Risky or unresolved changes return to human review. The **supervised** option can request earlier checkpoints. For exact modes, conditions, and whole-project execution, see [Workflow modes and safeguards](docs/workflow-modes.md).
-
-## Try the public adapter
-
-**No private access required.** Clone this repository and run:
+Anyone can clone this repository and verify the adapter **without private access**:
 
 ```bash
 bash tests/test-adapter.sh
 bash scripts/check-workflow-leak.sh
 ```
 
-The first command tests setup and updates with a local fake workflow. The second checks for certain accidentally tracked private workflow files. It is **not** a secrets scanner.
+Tests use a local fake workflow; [Ubuntu CI](.github/workflows/ci.yml) runs the same checks. The leak check detects selected tracked files — **it is not a secrets scanner**.
 
-[Read the technical review](docs/reviewer-guide.md) · [See setup code](scripts/setup-ai-workflow.sh) · [See tests](tests/test-adapter.sh)
+## Install and use (authorized users)
 
-## Use it in your own project (authorized users)
+Requires read access to the private `szymoniwacz/ai-project-template`.
 
-You need read access to my private `szymoniwacz/ai-project-template` repository.
-
-1. Create a GitHub repository from this template and clone it.
-2. Run setup and checks:
+1. Select **Use this template** on GitHub, create a project repository, and clone it.
+2. Run setup and verify:
 
    ```bash
    ./scripts/setup-ai-workflow.sh
@@ -63,33 +41,43 @@ You need read access to my private `szymoniwacz/ai-project-template` repository.
    ./scripts/check-workflow-leak.sh
    ```
 
-3. Add your project requirements and decisions under `.ai/project/`.
-4. In Codex or Cursor, open the project. Follow the instructions in `.ai/README.md`. For an approved, scoped goal, use `/execute-goal` where the command is available.
+3. Confirm the doctor reports **`Status: ready`**.
+4. Fill in `.ai/project/` with the project's context, roadmap, and decisions.
+5. Open the repository in Codex or Cursor. Read `.ai/README.md` and use its workflow commands for an authorized task.
 
-To refresh the workflow:
+**Update later:**
 
 ```bash
 ./scripts/update-ai-workflow.sh
+./scripts/ai-workflow-doctor.sh
 git status --short
 git diff --submodule
 ```
 
-**Before committing:** review changes. Do not commit copied private workflow instructions. GitHub and GitLab issue templates may be committed. Updating the submodule revision is a separate, explicit choice.
+Review the changes before committing. **Never commit the materialized private workflow.** [Detailed setup and troubleshooting](docs/setup.md).
 
-## Learn more
+## Review and merge modes
 
-- [Reviewer guide](docs/reviewer-guide.md) — key decisions, test evidence, and limitations
-- [Setup guide](docs/setup.md) — first use, updates, and requirements
-- [Architecture](docs/architecture.md) — how components fit together
-- [Workflow modes](docs/workflow-modes.md) — supervised, review, auto-merge and escalation
-- [Automation setup](docs/automation-setup.md) — private workflow access in cloud runs
-- [Current limits and possible improvements](docs/improvements.md) — what exists and what could be added
-- [Full specification](docs/repository-specification.md) — detailed contract and invariants
+The private workflow supports a **human-review default** and optional self-correcting review and authorized auto-merge:
 
-CI runs on **Ubuntu only**. See [GitHub Actions](.github/workflows/ci.yml).
+```mermaid
+flowchart LR
+    A["PR + validated changes"] --> B{"Authorized mode"}
+    B -->|"Default"| C["Human review and merge"]
+    B -->|"Self-correcting"| D["Review / fix / revalidate"]
+    D --> E{"Clean and eligible?"}
+    E -->|"No"| C
+    E -->|"Yes"| F{"Auto-merge authorized?"}
+    F -->|"No"| G["Human merge"]
+    F -->|"Yes + checks pass"| H["Goal Executor squash merge"]
+```
 
-**Limit:** external reviewers can test the adapter, but cannot run my private workflow without access. These tests do not measure AI-generated code quality.
+Independent agent review is preferred; self-review is the fallback. Risky changes and unresolved blockers require human involvement. **[See commands, supervised mode, safeguards, and full diagrams](docs/workflow-modes.md).**
 
-## License
+## Explore the implementation
 
-MIT.
+**[Technical walkthrough](docs/reviewer-guide.md)** · [Setup script](scripts/setup-ai-workflow.sh) · [Contract tests](tests/test-adapter.sh) · [Architecture](docs/architecture.md) · [Automation setup](docs/automation-setup.md) · [Future ideas](docs/improvements.md) · [Specification](docs/repository-specification.md)
+
+**Scope:** this repository demonstrates the integration architecture, not the private agent implementation or the accuracy of AI code review.
+
+MIT License.
