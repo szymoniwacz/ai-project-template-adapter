@@ -154,9 +154,9 @@ The repository therefore ignores known reusable materialized paths, including `.
 - reusable `.ai/**` materialized files are tracked outside the project-owned allowlist,
 - `.ai-template` is not represented as the expected gitlink when present in the repository,
 - a copied private workflow tree appears outside the submodule,
-- a tracked file exposes private workflow credentials or local authentication material.
+- paths that are explicitly recognized as private workflow copies are tracked. It does **not** perform content-based secret scanning or detect arbitrary credentials in project-owned files.
 
-The check must not fail merely because setup has materialized private workflow files in the working tree.
+The check must not fail merely because setup has materialized private workflow files in the working tree. A separate secret scanner and human review of changed files are required before publishing code or project context.
 
 ## 8. Thin agent adapters
 
