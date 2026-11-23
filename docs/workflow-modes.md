@@ -45,7 +45,7 @@ The forms above describe authorized issue comments or supported local commands; 
 
 ## Command reference
 
-These commands belong to the **private workflow** after authorized setup, not to the public adapter scripts. Tool support and issue references depend on the execution environment.
+These commands belong to the **private workflow** after authorized setup, not to the public adapter scripts. Tool support and issue references depend on the execution environment. Setup refreshes the private submodule from its configured remote, so the commands available after setup may differ from those in the submodule commit recorded in this public repository.
 
 | Command | Purpose |
 | --- | --- |
