@@ -230,20 +230,16 @@ Public adapter contract tests use a local fake private workflow fixture, never t
 
 Contract coverage includes:
 
-1. valid materialization,
-2. setup initialization behavior,
-3. setup refreshes a newer configured remote revision,
-4. fail-closed behavior when workflow is unavailable,
-6. tracked overlay preservation,
-7. preservation of uncommitted overlay edits,
-8. stale template file deletion,
-9. idempotent repeated setup,
-10. reusable private workflow remaining untracked,
-11. leak detection for accidentally tracked private files,
-12. nested-directory invocation,
-13. workflow revision reporting,
-13. Linux CI execution (Ubuntu runner),
-14. Codex and Cursor adapter materialization.
+1. workflow materialization and submodule initialization,
+2. refresh to a newer configured remote revision,
+3. fail-closed behavior when submodule configuration is missing,
+4. tracked overlay preservation, including uncommitted edits,
+5. removal of stale template-owned files and repeated-setup idempotency,
+6. private workflow paths remaining untracked and leak detection for selected tracked paths,
+7. invocation from a nested directory,
+8. workflow revision reporting and update-helper delegation,
+9. Codex/Cursor and GitHub/GitLab issue-template materialization and refresh,
+10. Ubuntu CI execution of these contract tests.
 
 The current suite does **not** independently exercise every missing-required-file validation path, and it does not run the real private workflow in public CI.
 
