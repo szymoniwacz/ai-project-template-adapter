@@ -13,6 +13,8 @@ An automation run needs:
 3. a workspace where the target repository can initialize its `.ai-template` submodule,
 4. provider credentials stored as runtime secrets or equivalent external configuration.
 
+Current private executor coordination also requires **Python 3.9+**, an authenticated **GitHub CLI (`gh`)**, and suitable repository contents/issues write permissions. These requirements belong to the private automation runtime; they are not needed to run the public adapter contract tests.
+
 Never commit a private-repository token, deploy key, or generated credential.
 
 ## Runtime bootstrap
