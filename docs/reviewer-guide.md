@@ -59,6 +59,8 @@ The setup command `./scripts/setup-ai-workflow.sh` **requires access to my priva
 - The actual Project Executor, Goal Executor, code-review instructions and validation policies are private, so this repository alone does not demonstrate their behavior.
 - The leak check covers specific tracked paths and cases. It is not a comprehensive secrets scanner or proof that arbitrary project files are safe to publish.
 - The repo's test suite verifies the adapter contract using fixtures; it does not validate AI-generated code quality or production correctness.
+- The repository stores a pinned private submodule revision, but setup intentionally refreshes that submodule from its configured remote. The pinned commit may therefore be older than the private workflow currently used in my projects. This repository alone does not prove compatibility with the latest private workflow revision.
+- The leak guard is path-based and does not scan file contents for secrets. Check public diffs and use a dedicated secrets scanner before publication.
 - The public repository reflects the version committed here; the private workflow may evolve independently.
 
 ## Why I built it
