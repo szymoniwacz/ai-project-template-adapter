@@ -24,7 +24,7 @@ Expect **`Status: ready`** and **`Workflow leak check: clean`**. The doctor conf
 
 ## 3. Configure your project
 
-Edit the tracked files in `.ai/project/`:
+Edit the following tracked files in `.ai/project/`:
 
 | File | What to write |
 | --- | --- |
@@ -32,7 +32,7 @@ Edit the tracked files in `.ai/project/`:
 | `roadmap.md` | Goals and upcoming work |
 | `decisions.md` | Important decisions and constraints |
 
-Open your repository in Codex or Cursor, read `.ai/README.md`, and follow the commands available in your tool. For goal execution modes and required authorization, see [Workflow commands](workflow-modes.md#available-options).
+Open your repository in Codex or Cursor, read `.ai/README.md`, and follow the commands available in your tool. For new project context files, check `.gitignore`: not every path under `.ai/project/` is automatically unignored. For goal execution modes and required authorization, see [Workflow commands](workflow-modes.md#available-options).
 
 ## 4. Update
 
