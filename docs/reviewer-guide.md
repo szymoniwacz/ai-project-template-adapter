@@ -50,7 +50,7 @@ bash tests/test-adapter.sh
 bash scripts/check-workflow-leak.sh
 ```
 
-The tests cover setup/refresh, idempotency, tracked overlay preservation, stale-file removal, failure scenarios, provider issue-template generation and Codex/Cursor adapter materialization. CI runs the test suite on Ubuntu and macOS.
+The tests cover setup/refresh, idempotency, tracked overlay preservation, stale-file removal, failure scenarios, provider issue-template generation and Codex/Cursor adapter materialization. CI runs the test suite on Ubuntu.
 
 **Do not run the production setup script without private access.** It is designed to fail if the private submodule cannot be loaded.
 
