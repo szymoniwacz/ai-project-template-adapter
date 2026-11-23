@@ -8,17 +8,34 @@ I built this adapter to connect my private workflow to Codex, Cursor, and cloud 
 
 ## How it works
 
-```text
-Private AI workflow (Git submodule)   Project requirements (.ai/project/)
-                  \                    /
-                   setup-ai-workflow.sh
-                            |
-                     Local .ai/ folder
-                            |
-               Codex / Cursor / automation
+ ```mermaid
+flowchart TB
+    A["Private reusable workflow<br/>Git submodule"] --> C["Setup and updates"]
+    B["Tracked project context<br/>Requirements and decisions"] --> C
+    C --> D["Local .ai/ runtime"]
+    D --> E["Codex and Cursor"]
+    D --> F["Cloud automation"]
 ```
 
 The setup script downloads the private workflow, puts its instructions in `.ai/`, restores tracked project files, and sets up tool adapters and GitHub/GitLab issue templates.
+
+## Workflow options
+
+The private workflow supports **human review by default**, plus explicitly authorized self-correcting review and conditional auto-merge.
+
+```mermaid
+flowchart LR
+    A["Validated change + PR"] --> B{"Mode"}
+    B -->|"Default"| C["Human review + merge"]
+    B -->|"Self-correcting"| D["Review / fix / revalidate"]
+    D --> E{"Eligible and clean?"}
+    E -->|"No"| C
+    E -->|"Yes"| F{"Auto-merge authorized?"}
+    F -->|"No"| G["Human merge"]
+    F -->|"Yes + all checks pass"| H["Goal Executor squash merge"]
+```
+
+Independent review is preferred; self-review is the fallback. Risky or unresolved changes return to human review. The **supervised** option can request earlier checkpoints. For exact modes, conditions, and whole-project execution, see [Workflow modes and safeguards](docs/workflow-modes.md).
 
 ## Try the public adapter
 
@@ -64,6 +81,7 @@ git diff --submodule
 - [Reviewer guide](docs/reviewer-guide.md) — key decisions, test evidence, and limitations
 - [Setup guide](docs/setup.md) — first use, updates, and requirements
 - [Architecture](docs/architecture.md) — how components fit together
+- [Workflow modes](docs/workflow-modes.md) — supervised, review, auto-merge and escalation
 - [Automation setup](docs/automation-setup.md) — private workflow access in cloud runs
 - [Full specification](docs/repository-specification.md) — detailed contract and invariants
 
