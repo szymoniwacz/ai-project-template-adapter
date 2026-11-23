@@ -3,6 +3,8 @@
 !.ai/project/
 .ai/project/*
 !.ai/project/decisions.md
+# Project-specific settings may be committed intentionally after customization.
+!.ai/project/alignment.yaml
 !.ai/project/glossary.md
 !.ai/project/product-context.md
 !.ai/project/roadmap.md
