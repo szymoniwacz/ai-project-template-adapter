@@ -193,7 +193,7 @@ Any local or cloud environment that needs the workflow must have read access to 
 
 Credentials must never be committed to the adapter or target repository. Cloud automation credentials belong in the automation provider's secret/runtime configuration.
 
-A user without access should receive a clear setup failure and no fallback implementation.
+A user without access should receive a clear setup failure and no fallback implementation. The failed command may already have made local Git/submodule changes; fail-closed here means no private executor logic runs, not an atomic rollback of bootstrap.
 
 ## 11. Workflow upgrades
 
