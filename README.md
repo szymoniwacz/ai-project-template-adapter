@@ -42,7 +42,7 @@ Requires read access to the private `szymoniwacz/ai-project-template`.
    ```
 
 3. Confirm the doctor reports **`Status: ready`**.
-4. Fill in `.ai/project/` with the project's context, roadmap, and decisions.
+4. Edit the tracked context, roadmap, and decision files in `.ai/project/`. New filenames may need `.gitignore` changes.
 5. Open the repository in Codex or Cursor. Read `.ai/README.md` and use its workflow commands for an authorized task.
 
 **Update later:**
