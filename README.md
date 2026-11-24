@@ -30,7 +30,7 @@ Tests use a local fake workflow; [Ubuntu CI](.github/workflows/ci.yml) runs the 
 
 ## Install and use (authorized users)
 
-Requires read access to the private `szymoniwacz/ai-project-template`.
+Requires read access to the private `szymoniwacz/ai-project-template` on the selected provider (GitHub or GitLab).
 
 1. Select **Use this template** on GitHub, create a project repository, and clone it.
 2. Run setup and verify:
@@ -40,6 +40,14 @@ Requires read access to the private `szymoniwacz/ai-project-template`.
    ./scripts/ai-workflow-doctor.sh
    ./scripts/check-workflow-leak.sh
    ```
+
+**Workflow source:** GitHub is the default. To load the private workflow from GitLab instead, run:
+
+```bash
+./scripts/setup-ai-workflow.sh --source gitlab
+```
+
+To switch back, use `--source github`. The choice persists locally for later setup/update runs without a flag. It does **not** change the tracked `.gitmodules` URL. Your Git credentials must allow access to the selected private repository. Both providers are tested with local fixtures; public CI does not fetch the private workflow. See [source selection details](docs/setup.md#workflow-source-github-or-gitlab).
 
 3. Confirm the doctor reports **`Status: ready`**.
 4. Edit the tracked context, roadmap, and decision files in `.ai/project/`. New filenames may need `.gitignore` changes.
