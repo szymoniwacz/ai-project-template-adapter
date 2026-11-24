@@ -56,6 +56,8 @@ The adapter deliberately does not duplicate private trigger, authorization, revi
 
 After private workflow setup, use the production-setup documents materialized from `ai-project-template`, including the Project Executor and Goal Executor automation setup documents, as the source of truth for provider trigger configuration.
 
+When upgrading an existing deployment to use `/auto-execute-goal` or `/auto-execute-project`, update the saved comment filters according to the corresponding private production-setup documents. Updating the submodule alone does not change deployed trigger settings. Local Codex and Cursor commands do not require cloud filter changes.
+
 This keeps public loader behavior stable while the private workflow can evolve independently.
 
 ## Verification
