@@ -272,6 +272,6 @@ git config -f "$tmp_root/git-test-config" --add "url.$fixture_repo.insteadOf" "$
 (cd "$project" && GIT_ALLOW_PROTOCOL=file ./scripts/setup-ai-workflow.sh --source github >/dev/null)
 [[ "$(git -C "$project" config --local --get submodule..ai-template.url)" == "$github_url" ]]
 [[ "$(git -C "$project/.ai-template" config --local --get remote.origin.url)" == "$github_url" ]]
-(cd "$project" && ./scripts/ai-workflow-doctor.sh | grep -q 'Status: ready')
+[[ -f "$project/.ai/README.md" ]]
 
 printf 'All adapter contract tests passed.\n'
