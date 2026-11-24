@@ -10,6 +10,20 @@ fi
 TEMPLATE="$ROOT/.ai-template"
 AI="$ROOT/.ai"
 
+# With no flag, reuse the source chosen in this clone (GitHub by default).
+# The choice is local Git configuration, not a tracked .gitmodules change.
+source_name=""
+if [[ "${1:-}" == "--source" && $# -eq 2 ]]; then
+  source_name="$2"
+  case "$source_name" in
+    github|gitlab) ;;
+    *) echo "error: --source must be github or gitlab" >&2; exit 2 ;;
+  esac
+elif [[ $# -ne 0 ]]; then
+  echo "usage: $0 [--source github|gitlab]" >&2
+  exit 2
+fi
+
 if [[ ! -f "$ROOT/.gitmodules" ]]; then
   echo "error: .gitmodules is missing" >&2
   exit 1
@@ -18,6 +32,29 @@ fi
 if ! git -C "$ROOT" config -f .gitmodules --get-regexp '^submodule\.\.ai-template\.path$' >/dev/null 2>&1; then
   echo "error: .gitmodules does not define .ai-template" >&2
   exit 1
+fi
+
+github_url="https://github.com/szymoniwacz/ai-project-template.git"
+gitlab_url="https://gitlab.com/szymoniwacz/ai-project-template.git"
+
+case "$source_name" in
+  github) selected_url="$github_url" ;;
+  gitlab) selected_url="$gitlab_url" ;;
+  *)
+    selected_url="$(git -C "$ROOT" config --local --get submodule..ai-template.url || true)"
+    if [[ -z "$selected_url" ]]; then
+      selected_url="$(git -C "$ROOT" config -f .gitmodules --get submodule..ai-template.url)"
+    fi
+    ;;
+esac
+
+# Keep the selected source local. Submodule initialization reads this setting;
+# already-initialized submodules need their origin updated separately.
+git -C "$ROOT" config --local submodule..ai-template.url "$selected_url"
+if [[ -d "$TEMPLATE" ]] && git -C "$TEMPLATE" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  if git -C "$TEMPLATE" remote get-url origin >/dev/null 2>&1; then
+    git -C "$TEMPLATE" remote set-url origin "$selected_url"
+  fi
 fi
 
 if ! git -C "$ROOT" submodule update --init --remote --recursive .ai-template; then
