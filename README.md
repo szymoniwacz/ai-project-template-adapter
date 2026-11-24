@@ -72,6 +72,8 @@ flowchart LR
     F -->|"Yes + checks pass"| H["Goal Executor squash merge"]
 ```
 
+Use `/auto-execute-goal` or `/auto-execute-project` to opt into the existing self-correcting review + eligible auto-merge mode. The original commands keep their existing defaults.
+
 Independent agent review is preferred; self-review is the fallback. Risky changes and unresolved blockers require human involvement. Project orchestration also supports dependency checks, duplicate-run coordination, and evidence-backed backlog audits. **[See commands, orchestration, safeguards, and diagrams](docs/workflow-modes.md).**
 
 ## Explore the implementation

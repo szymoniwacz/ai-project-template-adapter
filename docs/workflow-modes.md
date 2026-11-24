@@ -39,6 +39,8 @@ The diagrams simplify internal stages; actual execution follows the private auth
 | **Supervised** | Explicitly request a checkpoint or earlier stop | Work stops at the requested boundary, including before commit/push when requested |
 | **Self-correcting review** | `/execute-goal self-correcting-review` | Review/fix loop; eligible clean changes may skip human code review; human merge remains required |
 | **Self-correcting review + auto-merge** | `/execute-goal self-correcting-review auto-merge` | Eligible, clean changes may be squash-merged by Goal Executor after required checks |
+| **Auto-execute goal** | `/auto-execute-goal` | Exact alias for `/execute-goal self-correcting-review auto-merge` |
+| **Auto-execute project** | `/auto-execute-project` | Exact alias for `/execute-project self-correcting-review auto-merge` |
 | **Whole-project execution** | `/execute-project` with the same optional review suffixes | Project Executor delegates one goal at a time to Goal Executor; it never merges itself |
 
 The forms above describe authorized issue comments or supported local commands; local issue references may also be required. These modes are **opt-in where stated**. Merely including a label in a project file does not grant authorization.
@@ -52,6 +54,8 @@ These commands belong to the **private workflow** after authorized setup, not to
 | `/project-intake` or `/define-project` | Gather or organize project requirements |
 | `/execute-goal` | Run one authorized goal through a review-ready PR |
 | `/execute-project` | Orchestrate a project by delegating goals one at a time |
+| `/auto-execute-goal` | Opt into the existing self-correcting review and eligible auto-merge mode for one goal |
+| `/auto-execute-project` | Opt into the same mode for sequential project goals |
 | `/continue-project` | Resume an already authorized project when needed (local form: `/continue-project #12`) |
 | `/audit-project` | Check implemented work against accepted requirements |
 | `/plan-next-goals` | Plan missing goals while avoiding duplicate backlog work |
@@ -59,7 +63,7 @@ These commands belong to the **private workflow** after authorized setup, not to
 | `/review-integrated` | Review the integrated change |
 | `/run-self-correcting-review` | Run an authorized, bounded review/fix loop |
 
-Typical **local** issue-backed forms include `/execute-goal #42` and `/execute-goal #42 self-correcting-review auto-merge`. Local project execution requires the Project Execution issue number, for example `/execute-project #12` or `/execute-project #12 self-correcting-review auto-merge`. Authorized cloud execution uses matching commands as issue comments, without the local issue-number argument. A slash command is not a substitute for the authorization rules defined in the private workflow.
+Typical **local** issue-backed forms include `/execute-goal #42` and `/execute-goal #42 self-correcting-review auto-merge`. Local project execution requires the Project Execution issue number, for example `/execute-project #12` or `/execute-project #12 self-correcting-review auto-merge`. The equivalent short local forms are `/auto-execute-goal #42` and `/auto-execute-project #12`. Authorized cloud execution uses matching commands as issue comments, without the local issue-number argument. A slash command is not a substitute for the authorization rules defined in the private workflow.
 
 ### Review behavior
 
@@ -82,7 +86,7 @@ Independent review is **preferred, not guaranteed**. The self-correcting loop ha
 
 ### Merge safeguards
 
-Agent squash merge is possible **only** with the explicit `self-correcting-review auto-merge` option, a clean eligible review loop, applicable CI green (or no applicable CI), and no outstanding material or safety blockers. It is **not** GitHub's auto-merge queue. Default and escalated paths require human merge.
+Agent squash merge is possible **only** with the explicit `self-correcting-review auto-merge` option (or its exact `auto-execute` command alias), a clean eligible review loop, applicable CI green (or no applicable CI), and no outstanding material or safety blockers. It is **not** GitHub's auto-merge queue. Default and escalated paths require human merge.
 
 ## Project orchestration and recent workflow capabilities
 

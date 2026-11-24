@@ -11,6 +11,11 @@ missing_config="$tmp_root/missing-config"
 
 cp -a "$adapter_root/tests/fixtures/fake-ai-project-template" "$fixture_repo"
 mkdir -p "$fixture_repo/.agents/skills/project-intake" "$fixture_repo/.cursor/commands" "$fixture_repo/.ai/project"
+for command in auto-execute-goal auto-execute-project; do
+  mkdir -p "$fixture_repo/.agents/skills/$command"
+  printf '%s\n' '---' "name: $command" 'description: synthetic alias fixture' '---' > "$fixture_repo/.agents/skills/$command/SKILL.md"
+  printf '# /%s\n' "$command" > "$fixture_repo/.cursor/commands/$command.md"
+done
 mkdir -p "$fixture_repo/.gitlab/issue_templates"
 mkdir -p "$fixture_repo/.github/ISSUE_TEMPLATE"
 printf '%s\n' '---' 'name: project-intake' 'description: test adapter' '---' > "$fixture_repo/.agents/skills/project-intake/SKILL.md"
@@ -233,6 +238,11 @@ assert_contains "$copied_output" 'copied private ai-project-template repository 
 printf '16. setup materializes Codex and Cursor adapters\n'
 [[ -f "$project/.agents/skills/project-intake/SKILL.md" ]]
 [[ -f "$project/.cursor/commands/execute-goal.md" ]]
+for command in auto-execute-goal auto-execute-project; do
+  cmp "$fixture_repo/.agents/skills/$command/SKILL.md" "$project/.agents/skills/$command/SKILL.md"
+  cmp "$fixture_repo/.cursor/commands/$command.md" "$project/.cursor/commands/$command.md"
+  [[ -z "$(git -C "$project" ls-files -- ".agents/skills/$command" ".cursor/commands/$command.md")" ]]
+done
 [[ -f "$project/.gitlab/issue_templates/Agent Goal.md" ]]
 [[ -f "$project/.github/ISSUE_TEMPLATE/agent-goal.yml" ]]
 [[ -z "$(git -C "$project" status --porcelain -- .agents/skills .cursor/commands)" ]]
