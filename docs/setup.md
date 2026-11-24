@@ -11,6 +11,30 @@ This guide is for users with **read access** to the private `szymoniwacz/ai-proj
    ./scripts/setup-ai-workflow.sh
    ```
 
+### Workflow source: GitHub or GitLab
+
+The default private workflow source is GitHub, as specified in the tracked `.gitmodules` file:
+
+```bash
+./scripts/setup-ai-workflow.sh
+```
+
+To choose GitLab instead:
+
+```bash
+./scripts/setup-ai-workflow.sh --source gitlab
+```
+
+To explicitly switch back:
+
+```bash
+./scripts/setup-ai-workflow.sh --source github
+```
+
+The choice is stored in the clone's local Git config (`submodule..ai-template.url`) and the initialized submodule's `origin`; **it does not change `.gitmodules`**. Subsequent setup/update calls without `--source` reuse this source. Fresh clones default to GitHub unless GitLab is explicitly selected. The account running setup needs read access to the chosen private repository. GitHub and GitLab copies must be kept up to date independently; selecting a source does not synchronize them.
+
+Public CI and contract tests use a fake local workflow and require **no private repository credentials**. GitHub/GitLab selection is tested through local Git URL rewrites.
+
 This updates the private Git submodule and materializes workflow instructions to `.ai/`, agent integrations, and GitHub/GitLab issue templates. It preserves existing files in `.ai/project/` (tracked or untracked), seeds missing project defaults from the private workflow, and restores other **tracked** project-specific `.ai/` files after copying the reusable workflow.
 
 **Important before running setup again:** the script uses `rsync --delete` for `.ai/`, `.agents/skills/`, `.cursor/commands/`, `.github/ISSUE_TEMPLATE/`, and `.gitlab/issue_templates/`. Files in these destinations that are not in the current private template may be removed, **except files in `.ai/project/`, which setup leaves intact**. Only tracked files outside `.ai/project/` are restored by the overlay. Review or back up custom files and provider issue templates — **including tracked ones** — before updating. Tracked issue templates are not part of the preserved `.ai/` overlay.
@@ -48,6 +72,8 @@ Open your repository in Codex or Cursor, read `.ai/README.md`, and follow the co
 git status --short
 git diff --submodule
 ```
+
+To change source while updating, use `./scripts/update-ai-workflow.sh --source gitlab` (or `--source github`). Without the flag, the updater keeps the previously selected source.
 
 Setup intentionally fetches the configured private remote revision, which may differ from the submodule commit recorded in Git. The update helper reports old/new revisions but **does not commit** the new submodule reference.
 
