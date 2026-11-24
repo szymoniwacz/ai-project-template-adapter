@@ -9,7 +9,7 @@ fi
 
 old_revision="$(git -C "$ROOT/.ai-template" rev-parse HEAD 2>/dev/null || printf 'unknown')"
 
-"$ROOT/scripts/setup-ai-workflow.sh"
+"$ROOT/scripts/setup-ai-workflow.sh" "$@"
 
 new_revision="$(git -C "$ROOT/.ai-template" rev-parse HEAD 2>/dev/null || printf 'unknown')"
 printf 'AI workflow revision: %s -> %s\n' "$old_revision" "$new_revision"

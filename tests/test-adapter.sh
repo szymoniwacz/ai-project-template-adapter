@@ -239,4 +239,39 @@ printf '16. setup materializes Codex and Cursor adapters\n'
 [[ -n "$(git -C "$project" status --porcelain -- '.gitlab/issue_templates/Agent Goal.md')" ]]
 [[ -n "$(git -C "$project" status --porcelain -- .github/ISSUE_TEMPLATE/agent-goal.yml)" ]]
 
+printf '17. GitLab source works without changing tracked .gitmodules\n'
+gitlab_url='https://gitlab.com/szymoniwacz/ai-project-template.git'
+github_url='https://github.com/szymoniwacz/ai-project-template.git'
+# Redirect the GitLab URL to the same local fake private workflow. No credentials
+# or external network access are needed to exercise source switching.
+git config -f "$tmp_root/git-test-config" "url.$fixture_repo.insteadOf" "$gitlab_url"
+export GIT_CONFIG_GLOBAL="$tmp_root/git-test-config"
+(cd "$project" && GIT_ALLOW_PROTOCOL=file ./scripts/setup-ai-workflow.sh --source gitlab >/dev/null)
+[[ "$(git -C "$project" config --local --get submodule..ai-template.url)" == "$gitlab_url" ]]
+[[ "$(git -C "$project/.ai-template" config --local --get remote.origin.url)" == "$gitlab_url" ]]
+[[ "$(git -C "$project" config -f .gitmodules --get submodule..ai-template.url)" == "$fixture_repo" ]]
+
+printf '18. update reuses the chosen GitLab source by default\n'
+(cd "$project" && GIT_ALLOW_PROTOCOL=file ./scripts/update-ai-workflow.sh >/dev/null)
+[[ "$(git -C "$project" config --local --get submodule..ai-template.url)" == "$gitlab_url" ]]
+[[ "$(git -C "$project/.ai-template" config --local --get remote.origin.url)" == "$gitlab_url" ]]
+
+printf '19. invalid source fails without changing configuration\n'
+set +e
+invalid_output="$(cd "$project" && ./scripts/setup-ai-workflow.sh --source invalid 2>&1)"
+invalid_status=$?
+set -e
+[[ "$invalid_status" -ne 0 ]]
+assert_contains "$invalid_output" '--source must be github or gitlab'
+[[ "$(git -C "$project" config --local --get submodule..ai-template.url)" == "$gitlab_url" ]]
+
+printf '20. explicit GitHub source switches back\n'
+# The fixture project uses a local URL as its .gitmodules default; GitHub is
+# tested through the same URL-rewrite approach as GitLab.
+git config -f "$tmp_root/git-test-config" --add "url.$fixture_repo.insteadOf" "$github_url"
+(cd "$project" && GIT_ALLOW_PROTOCOL=file ./scripts/setup-ai-workflow.sh --source github >/dev/null)
+[[ "$(git -C "$project" config --local --get submodule..ai-template.url)" == "$github_url" ]]
+[[ "$(git -C "$project/.ai-template" config --local --get remote.origin.url)" == "$github_url" ]]
+[[ -f "$project/.ai/README.md" ]]
+
 printf 'All adapter contract tests passed.\n'
